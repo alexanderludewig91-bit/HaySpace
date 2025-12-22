@@ -95,38 +95,40 @@ export function drawHUD(ctx, game) {
   ctx.textBaseline = 'top';
 
   const leftX = padX + 18;
-  const topY = padY + 18;
-  const lineH = 20;
+  const topY = padY + 8; // Höher positioniert für mehr Platz
   const barH = 12;
-  const labelHeight = 16; // Höhe für Labels über Bars
+  const labelHeight = 18; // Abstand zwischen Label und Bar
   const barSpacing = 20; // Abstand zwischen Elementen
+  const rowSpacing = 8; // Abstand zwischen den beiden Zeilen
 
   // === ERSTE ZEILE: Lives, Weapon, Speed ===
+  const firstRowLabelY = topY;
+  const firstRowBarY = topY + labelHeight;
   
   // Lives (links)
   const livesX = leftX;
   ctx.fillStyle = 'rgba(245,250,255,.62)';
-  ctx.fillText('Lives', livesX, topY);
+  ctx.fillText('Lives', livesX, firstRowLabelY);
   
-  const lifeIconSpacing = 20;
+  const lifeIconSpacing = 24; // Etwas mehr Abstand für größere Icons
   const lifeStartX = livesX + 50;
-  const lifeY = topY + 2;
+  const lifeY = firstRowLabelY + 1; // Zentriert mit der Schrift
   
+  // Icons größer machen (Scale 0.4 statt 0.25) - etwa so groß wie die Schrift (13px)
   for (let i = 0; i < game.player.lives; i++) {
-    drawLifeIcon(ctx, lifeStartX + i * lifeIconSpacing, lifeY, 0.25);
+    drawLifeIcon(ctx, lifeStartX + i * lifeIconSpacing, lifeY, 0.4);
   }
 
   // Weapon (Mitte)
   const weaponX = lifeStartX + (3 * lifeIconSpacing) + barSpacing; // Platz für 3 Icons + Abstand
   ctx.fillStyle = 'rgba(245,250,255,.62)';
-  ctx.fillText('Weapon', weaponX, topY);
+  ctx.fillText('Weapon', weaponX, firstRowLabelY);
   
   const weaponBarX = weaponX;
-  const weaponBarY = topY + labelHeight;
   const weaponBarW = 110;
   
   ctx.fillStyle = 'rgba(255,255,255,.10)';
-  drawRoundedRect(ctx, weaponBarX, weaponBarY, weaponBarW, barH, 999);
+  drawRoundedRect(ctx, weaponBarX, firstRowBarY, weaponBarW, barH, 999);
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,.12)';
   ctx.lineWidth = 1;
@@ -135,25 +137,24 @@ export function drawHUD(ctx, game) {
   // Weapon Level: 1-5 -> 0-100% (Level 1 = 0%, Level 5 = 100%)
   const weaponPct = clamp((game.player.weaponLevel - 1) / 4, 0, 1);
   if (weaponPct > 0) {
-    const grad = ctx.createLinearGradient(weaponBarX, weaponBarY, weaponBarX + weaponBarW, weaponBarY);
+    const grad = ctx.createLinearGradient(weaponBarX, firstRowBarY, weaponBarX + weaponBarW, firstRowBarY);
     grad.addColorStop(0, '#1a2a6c');
     grad.addColorStop(1, '#4de3ff');
     ctx.fillStyle = grad;
-    drawRoundedRect(ctx, weaponBarX, weaponBarY, weaponBarW * weaponPct, barH, 999);
+    drawRoundedRect(ctx, weaponBarX, firstRowBarY, weaponBarW * weaponPct, barH, 999);
     ctx.fill();
   }
 
   // Speed (rechts)
   const speedX = weaponBarX + weaponBarW + barSpacing;
   ctx.fillStyle = 'rgba(245,250,255,.62)';
-  ctx.fillText('Speed', speedX, topY);
+  ctx.fillText('Speed', speedX, firstRowLabelY);
   
   const speedBarX = speedX;
-  const speedBarY = topY + labelHeight;
   const speedBarW = 110;
   
   ctx.fillStyle = 'rgba(255,255,255,.10)';
-  drawRoundedRect(ctx, speedBarX, speedBarY, speedBarW, barH, 999);
+  drawRoundedRect(ctx, speedBarX, firstRowBarY, speedBarW, barH, 999);
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,.12)';
   ctx.lineWidth = 1;
@@ -161,25 +162,27 @@ export function drawHUD(ctx, game) {
   
   const speedPct = clamp((game.player.speedBoost - 1.0) / 1.0, 0, 1); // 1.0 = 0%, 2.0 = 100%
   if (speedPct > 0) {
-    const grad = ctx.createLinearGradient(speedBarX, speedBarY, speedBarX + speedBarW, speedBarY);
+    const grad = ctx.createLinearGradient(speedBarX, firstRowBarY, speedBarX + speedBarW, firstRowBarY);
     grad.addColorStop(0, '#ffd166');
     grad.addColorStop(1, '#ff9f1c');
     ctx.fillStyle = grad;
-    drawRoundedRect(ctx, speedBarX, speedBarY, speedBarW * speedPct, barH, 999);
+    drawRoundedRect(ctx, speedBarX, firstRowBarY, speedBarW * speedPct, barH, 999);
     ctx.fill();
   }
 
   // === ZWEITE ZEILE: Shield, Heat ===
-  const secondRowY = topY + labelHeight + barH + 8; // Unter der ersten Zeile
+  // Sicherstellen, dass die zweite Zeile genug Abstand zur ersten hat
+  const secondRowLabelY = firstRowBarY + barH + rowSpacing;
+  const secondRowBarY = secondRowLabelY + labelHeight;
 
   // Shield (links)
   const shieldX = leftX;
   ctx.fillStyle = 'rgba(245,250,255,.62)';
-  ctx.fillText('Shield', shieldX, secondRowY - labelHeight);
+  ctx.fillText('Shield', shieldX, secondRowLabelY);
 
   ctx.fillStyle = 'rgba(255,255,255,.10)';
   const shieldBarW = 240;
-  drawRoundedRect(ctx, shieldX, secondRowY, shieldBarW, barH, 999);
+  drawRoundedRect(ctx, shieldX, secondRowBarY, shieldBarW, barH, 999);
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,.12)';
   ctx.lineWidth = 1;
@@ -187,22 +190,22 @@ export function drawHUD(ctx, game) {
 
   const shieldPct = game.player.shield / game.player.shieldMax;
   if (shieldPct > 0) {
-    const grad = ctx.createLinearGradient(shieldX, secondRowY, shieldX + shieldBarW, secondRowY);
+    const grad = ctx.createLinearGradient(shieldX, secondRowBarY, shieldX + shieldBarW, secondRowBarY);
     grad.addColorStop(0, '#6cff9a');
     grad.addColorStop(1, '#4de3ff');
     ctx.fillStyle = grad;
-    drawRoundedRect(ctx, shieldX, secondRowY, shieldBarW * shieldPct, barH, 999);
+    drawRoundedRect(ctx, shieldX, secondRowBarY, shieldBarW * shieldPct, barH, 999);
     ctx.fill();
   }
 
   // Heat (rechts)
   const heatX = shieldX + shieldBarW + barSpacing;
   ctx.fillStyle = 'rgba(245,250,255,.62)';
-  ctx.fillText('Heat', heatX, secondRowY - labelHeight);
+  ctx.fillText('Heat', heatX, secondRowLabelY);
 
   ctx.fillStyle = 'rgba(255,255,255,.10)';
   const heatBarW = 150;
-  drawRoundedRect(ctx, heatX, secondRowY, heatBarW, barH, 999);
+  drawRoundedRect(ctx, heatX, secondRowBarY, heatBarW, barH, 999);
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,.12)';
   ctx.lineWidth = 1;
@@ -210,11 +213,11 @@ export function drawHUD(ctx, game) {
 
   const heatPct = clamp(game.player.heat, 0, 100) / 100;
   if (heatPct > 0) {
-    const grad = ctx.createLinearGradient(heatX, secondRowY, heatX + heatBarW, secondRowY);
+    const grad = ctx.createLinearGradient(heatX, secondRowBarY, heatX + heatBarW, secondRowBarY);
     grad.addColorStop(0, '#ffd166');
     grad.addColorStop(1, '#ff3b6b');
     ctx.fillStyle = grad;
-    drawRoundedRect(ctx, heatX, secondRowY, heatBarW * heatPct, barH, 999);
+    drawRoundedRect(ctx, heatX, secondRowBarY, heatBarW * heatPct, barH, 999);
     ctx.fill();
   }
 
@@ -222,13 +225,13 @@ export function drawHUD(ctx, game) {
   if (game.overheatLocked) {
     ctx.fillStyle = 'rgba(255,59,107,.95)';
     ctx.font = '800 12px ui-sans-serif, system-ui';
-    ctx.fillText('OVERHEAT', heatX + heatBarW + 10, secondRowY - labelHeight);
+    ctx.fillText('OVERHEAT', heatX + heatBarW + 10, secondRowLabelY);
   }
 
   // Boss Bar (wenn vorhanden) - rechts oben, nicht im Hauptpanel
   if (game.boss) {
     const rightX = W - padX - 338;
-    const bossBarY = secondRowY; // Gleiche Zeile wie Shield/Heat
+    const bossBarY = secondRowBarY; // Gleiche Zeile wie Shield/Heat Bars
     const bossBarW = 320;
 
     ctx.fillStyle = 'rgba(255,255,255,.10)';
@@ -247,11 +250,11 @@ export function drawHUD(ctx, game) {
 
     ctx.fillStyle = 'rgba(245,250,255,.62)';
     ctx.font = '500 13px ui-sans-serif, system-ui';
-    ctx.fillText('Boss', rightX, secondRowY - labelHeight);
+    ctx.fillText('Boss', rightX, secondRowLabelY);
 
     ctx.fillStyle = 'rgba(245,250,255,.92)';
     ctx.font = '600 13px ui-sans-serif, system-ui';
-    ctx.fillText('DREAD CORE', rightX + 60, secondRowY - labelHeight);
+    ctx.fillText('DREAD CORE', rightX + 60, secondRowLabelY);
   }
 
   ctx.restore();
