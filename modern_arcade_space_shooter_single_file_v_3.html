@@ -279,8 +279,17 @@
     y: Math.random()*H,
     r: Math.random()<0.85 ? rand(0.6, 1.6) : rand(1.8, 3.0),
     v: rand(14, 55),
-    a: rand(0.18, 0.85)
+    a: rand(0.18, 0.85),
+    twinklePhase: Math.random() * Math.PI * 2, // Für Twinkeln
+    twinkleSpeed: rand(0.5, 1.5) // Verschiedene Twinkle-Geschwindigkeiten
   }));
+
+  // Nebula mit Bewegung
+  const nebulas = [
+    { x: W*0.62, y: H*0.22, baseR: 220, color: 'rgba(0,212,255,0.25)', baseAlpha: 0.9, v: rand(8, 15) },
+    { x: W*0.28, y: H*0.78, baseR: 260, color: 'rgba(108,255,154,0.16)', baseAlpha: 0.85, v: rand(6, 12) },
+    { x: W*0.82, y: H*0.70, baseR: 220, color: 'rgba(255,59,107,0.12)', baseAlpha: 0.75, v: rand(10, 18) }
+  ];
 
   let boss = null;
 
@@ -582,9 +591,21 @@
     time += dt;
 
     // background motion
+    // Stars bewegen und twinkeln
     for (const s of stars){
       s.y += s.v*dt;
+      s.twinklePhase += s.twinkleSpeed * dt;
       if (s.y > H+30){ s.y = -30; s.x = Math.random()*W; }
+    }
+
+    // Nebula bewegen
+    for (const n of nebulas){
+      n.y += n.v * dt;
+      // Nebula wieder nach oben wenn sie unten raus sind
+      if (n.y > H + n.baseR){
+        n.y = -n.baseR;
+        n.x = Math.random() * W; // Zufällige X-Position
+      }
     }
 
     // movement tuned for modern feel (mit Speed-Boost)
@@ -898,34 +919,26 @@
     ctx.fillStyle = bg;
     ctx.fillRect(0,0,W,H);
 
-    // nebula blobs
+    // nebula blobs (bewegend)
     ctx.save();
     ctx.globalAlpha = 0.55;
-    drawGlowCircle(W*0.62, H*0.22, 220, 'rgba(0,212,255,0.25)', 0.9);
-    drawGlowCircle(W*0.28, H*0.78, 260, 'rgba(108,255,154,0.16)', 0.85);
-    drawGlowCircle(W*0.82, H*0.70, 220, 'rgba(255,59,107,0.12)', 0.75);
+    for (const n of nebulas){
+      drawGlowCircle(n.x, n.y, n.baseR, n.color, n.baseAlpha);
+    }
     ctx.restore();
 
-    // stars
+    // stars (mit Twinkle-Effekt)
     for (const s of stars){
       ctx.save();
-      ctx.globalAlpha = s.a;
+      // Twinkle: Helligkeit pulsiert
+      const twinkle = 0.6 + 0.4 * (0.5 + 0.5 * Math.sin(s.twinklePhase)); // 0.6 bis 1.0
+      ctx.globalAlpha = s.a * twinkle;
       ctx.fillStyle = 'rgba(245,250,255,0.9)';
       ctx.fillRect(s.x, s.y, s.r, s.r);
       ctx.restore();
     }
 
-    // soft depth lines
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    for (let y=0;y<H;y+=24){
-      ctx.beginPath();
-      ctx.moveTo(0, y + (time*20)%24);
-      ctx.lineTo(W, y + (time*20)%24);
-      ctx.stroke();
-    }
-    ctx.restore();
+    // soft depth lines entfernt
 
     // entities
     for (const e of enemies) drawEnemy(e);
@@ -1380,13 +1393,25 @@
   }
 
   let last = performance.now();
+  let accumulator = 0;
+  const targetFPS = 60;
+  const fixedDT = 1.0 / targetFPS; // 0.016666... für 60 FPS
+  
   function frame(now){
-    const dt = Math.min(0.033, (now - last)/1000);
+    const realDT = Math.min(0.033, (now - last)/1000); // Cap bei 33ms (30 FPS minimum)
     last = now;
-
-    if (state === 'play' && !paused){
-      update(dt);
+    accumulator += realDT;
+    
+    // Feste Delta-Time für konsistente Physik unabhängig von Frame-Rate
+    // Führe mehrere Updates aus wenn nötig (bei niedriger Frame-Rate)
+    while (accumulator >= fixedDT) {
+      const dt = fixedDT;
+      accumulator -= fixedDT;
+      
+      if (state === 'play' && !paused) update(dt);
     }
+    
+    // Render immer mit aktueller Frame-Rate
 
     // shake transform (modern: subtle translate)
     let sx = 0, sy = 0;
