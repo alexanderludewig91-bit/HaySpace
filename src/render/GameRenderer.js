@@ -76,16 +76,18 @@ export function drawPlayer(ctx, p, time){
 export function drawEnemy(ctx, e, hardMode){
   ctx.save();
 
-  const glow = `rgba(255,59,107,${e.kind==='tank' ? 0.55 : 0.48})`;
-  drawGlowCircle(ctx, e.x, e.y, e.r*1.15, glow, 1);
+  // Farben basierend auf Gegner-Typ (hue aus e.hue)
+  const hue = e.hue || 340;
+  const glowColor = `hsla(${hue}, 100%, 60%, ${e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' ? 0.55 : 0.48})`;
+  drawGlowCircle(ctx, e.x, e.y, e.r*1.15, glowColor, 1);
 
   ctx.translate(e.x, e.y);
 
   const body = ctx.createLinearGradient(0,-e.r, 0, e.r);
   body.addColorStop(0,'rgba(255,255,255,0.85)');
-  body.addColorStop(1,'rgba(255,59,107,0.90)');
+  body.addColorStop(1,`hsla(${hue}, 100%, 50%, 0.90)`);
 
-  ctx.shadowColor = 'rgba(255,59,107,0.55)';
+  ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
   ctx.shadowBlur = 22;
 
   ctx.fillStyle = body;
@@ -100,17 +102,22 @@ export function drawEnemy(ctx, e, hardMode){
   ctx.ellipse(0, -e.r*0.18, e.r*0.65, e.r*0.45, 0, 0, Math.PI*2);
   ctx.stroke();
 
-  drawGlowCircle(ctx, e.r*0.22, -e.r*0.08, e.kind==='tank'? 8 : 6, 'rgba(255,209,102,0.90)', 1);
+  drawGlowCircle(ctx, e.r*0.22, -e.r*0.08, e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer'? 8 : 6, 'rgba(255,209,102,0.90)', 1);
 
-  if (e.kind === 'tank'){
+  // HP-Bar für Tank, Guardian und Destroyer
+  if (e.kind === 'tank' || e.kind === 'guardian' || e.kind === 'destroyer'){
     const w = 70;
-    const hp = clamp(e.hp, 0, hardMode?14:10);
-    const max = hardMode?14:10;
+    let maxHP;
+    if (e.kind === 'tank') maxHP = hardMode ? 14 : 10;
+    else if (e.kind === 'guardian') maxHP = hardMode ? 18 : 14;
+    else maxHP = hardMode ? 24 : 20;
+    
+    const hp = clamp(e.hp, 0, maxHP);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     drawRoundedRect(ctx, -w/2, -e.r-22, w, 8, 999);
     ctx.fill();
     ctx.fillStyle = 'rgba(108,255,154,0.85)';
-    drawRoundedRect(ctx, -w/2, -e.r-22, w*(hp/max), 8, 999);
+    drawRoundedRect(ctx, -w/2, -e.r-22, w*(hp/maxHP), 8, 999);
     ctx.fill();
   }
 
@@ -303,19 +310,7 @@ export function render(ctx, game){
 
   for (const pp of game.popups) drawPopup(ctx, pp);
 
-  if (game.paused && game.state==='play'){
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
-    ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = 'rgba(245,250,255,.92)';
-    ctx.font = '700 22px ui-sans-serif, system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', W/2, H/2);
-    ctx.font = '500 14px ui-sans-serif, system-ui';
-    ctx.fillStyle = 'rgba(245,250,255,.68)';
-    ctx.fillText('Press P to resume', W/2, H/2 + 26);
-    ctx.restore();
-  }
+  // Pause-Screen wird jetzt als HTML-Overlay gerendert, nicht mehr im Canvas
 
   if (game.shake > 0){
     ctx.save();

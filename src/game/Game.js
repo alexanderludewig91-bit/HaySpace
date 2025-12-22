@@ -15,6 +15,8 @@ export class Game {
     this.state = 'title';
     this.paused = false;
     this.overheatLocked = false;
+    this.currentLevel = 1;
+    this.unlockedLevels = this.getUnlockedLevels();
     
     this.player = {
       x: W*0.5, y: H*0.78,
@@ -50,6 +52,26 @@ export class Game {
     this.boss = null;
   }
 
+  getUnlockedLevels() {
+    const stored = localStorage.getItem('unlockedLevels');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return [1]; // Level 1 ist immer freigeschaltet
+  }
+
+  unlockLevel(level) {
+    if (!this.unlockedLevels.includes(level)) {
+      this.unlockedLevels.push(level);
+      this.unlockedLevels.sort((a, b) => a - b);
+      localStorage.setItem('unlockedLevels', JSON.stringify(this.unlockedLevels));
+    }
+  }
+
+  setLevel(level) {
+    this.currentLevel = level;
+  }
+
   addPopup(text, x, y, life=0.75, kind='normal'){
     this.popups.push({text, x, y, vy: -48, life, max: life, kind});
   }
@@ -57,9 +79,24 @@ export class Game {
   resetAll(){
     this.score = 0; this.wave = 1; this.time = 0;
     this.waveMessage = 0;
+    // currentLevel wird NICHT zurückgesetzt, damit es beim Restart erhalten bleibt
     this.bullets.length = 0; this.enemies.length = 0; this.particles.length = 0; 
     this.pickups.length = 0; this.enemyBullets.length = 0; this.popups.length = 0;
     this.boss = null;
+    
+    // Player zurücksetzen
+    this.player.shield = this.player.shieldMax;
+    this.player.lives = 3;
+    this.player.weaponLevel = 1;
+    this.player.speedBoost = 1.0;
+    this.player.x = W*0.5;
+    this.player.y = H*0.78;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.player.inv = 0;
+    this.player.heat = 0;
+    this.player.fireCD = 0;
+    this.player.dashCD = 0;
 
     this.player.x = W*0.5; this.player.y = H*0.78;
     this.player.vx = 0; this.player.vy = 0;
@@ -83,11 +120,13 @@ export class Game {
       hue: (kind==='tank') ? 350 : (kind==='striker' ? 330 : 340)
     };
 
+    // Level 1 Gegner
     if (kind === 'drone') {
       base.r = 12;
       base.hp = this.hardMode ? 3 : 2;
       base.vy = rand(60, 95);
       base.score = 25;
+      base.hue = 340;
     }
 
     if (kind === 'striker') {
@@ -97,6 +136,7 @@ export class Game {
       base.vx = rand(-50, 50);
       base.score = 45;
       base.shootCD = rand(1.2, 2.0);
+      base.hue = 330;
     }
 
     if (kind === 'tank') {
@@ -105,6 +145,47 @@ export class Game {
       base.vy = rand(35, 50);
       base.score = 90;
       base.shootCD = rand(1.5, 2.5);
+      base.hue = 350;
+    }
+
+    // Level 2 Gegner (neue Typen, andere Farben)
+    if (kind === 'hunter') {
+      base.r = 13;
+      base.hp = this.hardMode ? 5 : 4;
+      base.vy = rand(70, 100);
+      base.vx = rand(-30, 30);
+      base.score = 40;
+      base.shootCD = rand(0.8, 1.5);
+      base.hue = 200; // Cyan
+    }
+
+    if (kind === 'crusher') {
+      base.r = 16;
+      base.hp = this.hardMode ? 8 : 6;
+      base.vy = rand(50, 75);
+      base.vx = rand(-40, 40);
+      base.score = 60;
+      base.shootCD = rand(1.0, 1.8);
+      base.hue = 280; // Lila
+    }
+
+    if (kind === 'guardian') {
+      base.r = 20;
+      base.hp = this.hardMode ? 18 : 14;
+      base.vy = rand(40, 60);
+      base.score = 110;
+      base.shootCD = rand(1.3, 2.2);
+      base.hue = 50; // Gelb-Grün
+    }
+
+    // Level 3 Gegner (noch schwerer)
+    if (kind === 'destroyer') {
+      base.r = 22;
+      base.hp = this.hardMode ? 24 : 20;
+      base.vy = rand(45, 65);
+      base.score = 150;
+      base.shootCD = rand(1.0, 1.6);
+      base.hue = 10; // Rot-Orange
     }
 
     this.enemies.push(base);
@@ -116,7 +197,18 @@ export class Game {
     
     const count = 6 + n*2 + (this.hardMode?2:0);
     for (let i=0;i<count;i++){
-      const kind = (Math.random()<0.6) ? 'drone' : (Math.random()<0.78 ? 'striker' : 'tank');
+      // Level-spezifische Gegner-Typen
+      let kind;
+      if (this.currentLevel === 1) {
+        // Level 1: Original-Gegner
+        kind = (Math.random()<0.6) ? 'drone' : (Math.random()<0.78 ? 'striker' : 'tank');
+      } else if (this.currentLevel === 2) {
+        // Level 2: Neue Gegner-Typen
+        kind = (Math.random()<0.5) ? 'hunter' : (Math.random()<0.75 ? 'crusher' : 'guardian');
+      } else {
+        // Level 3: Noch schwerere Gegner
+        kind = (Math.random()<0.4) ? 'hunter' : (Math.random()<0.7 ? 'crusher' : (Math.random()<0.9 ? 'guardian' : 'destroyer'));
+      }
       this.spawnEnemy(kind, rand(80, W-80), rand(-520, -120));
     }
   }
@@ -479,8 +571,12 @@ export class Game {
           this.addExplosion(this.boss.x,this.boss.y, 2.6);
           for (let k=0;k<14;k++) this.addExplosion(this.boss.x+rand(-90,90), this.boss.y+rand(-70,70), 1.1);
           this.boss = null;
-          this.state = 'win';
-          return true; // Signal für Win
+          // Level-Ende: Nächstes Level freischalten
+          if (this.currentLevel < 3) {
+            this.unlockLevel(this.currentLevel + 1);
+          }
+          this.state = 'levelComplete';
+          return true; // Signal für Level-Ende
         }
       }
       if (hit) continue;

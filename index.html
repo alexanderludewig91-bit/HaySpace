@@ -38,18 +38,60 @@
   <div id="wrap"><canvas id="c" width="1600" height="900"></canvas></div>
 
   <div id="overlay">
-    <div class="card">
-      <h1>MODERN ARCADE SPACE SHOOTER</h1>
-      <p>
-        Modernisierte Optik (Apple-Arcade-artiger Look): weiche Lichter, Bloom/Glow, Vektor-Shapes, weiche Trails und glasiges HUD.
-      </p>
-      <div class="row" style="margin-top:12px">
-        <button class="btn" id="startBtn">Start (Enter)</button>
-        <span class="small">R restart • M hard mode</span>
+    <!-- Title Screen with Background Image -->
+    <div id="titleScreen" class="title-screen">
+      <div class="title-screen-bg"></div>
+      <div class="title-screen-content">
+        <div id="startJourneySection" class="title-section">
+          <button class="btn btn-large" id="startJourneyBtn">Start Your Journey</button>
+        </div>
+        <div id="mainMenuSection" class="title-section hidden">
+          <button class="btn btn-large" id="newGameBtn">New Game</button>
+          <button class="btn btn-large" id="continueBtn">Continue</button>
+          <button class="btn btn-large" id="settingsBtn">Settings</button>
+        </div>
       </div>
-      <p class="small" style="margin-top:10px">
-        Hinweis: Browser erlauben Audio erst nach Interaktion (Start/Keypress). SFX sind bereits integriert.
-      </p>
+    </div>
+
+    <!-- Level Selection -->
+    <div class="card hidden" id="levelSelect">
+      <h1>LEVELAUSWAHL</h1>
+      <div id="levelList" style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px; min-width: 400px;">
+        <!-- Levels werden dynamisch eingefügt -->
+      </div>
+      <div class="row" style="margin-top:20px">
+        <button class="btn" id="backToTitleBtn">Zurück</button>
+      </div>
+    </div>
+
+    <!-- Level Complete -->
+    <div class="card hidden" id="levelComplete">
+      <h1 id="levelCompleteTitle">LEVEL GESCHAFFT!</h1>
+      <p id="levelCompleteText">Gratulation! Du hast das Level erfolgreich abgeschlossen.</p>
+      <div class="row" style="margin-top:20px; gap: 12px;">
+        <button class="btn" id="nextLevelBtn">Nächstes Level</button>
+        <button class="btn" id="backToLevelSelectBtn">Zur Levelauswahl</button>
+      </div>
+    </div>
+
+    <!-- Game Complete -->
+    <div class="card hidden" id="gameComplete">
+      <h1>SPIEL GESCHAFFT!</h1>
+      <p>Herzlichen Glückwunsch! Du hast alle Level erfolgreich abgeschlossen!</p>
+      <div class="row" style="margin-top:20px">
+        <button class="btn" id="backToLevelSelectFromCompleteBtn">Zur Levelauswahl</button>
+      </div>
+    </div>
+
+    <!-- Pause Menu -->
+    <div class="card hidden" id="pauseMenu">
+      <h1>PAUSIERT</h1>
+      <p>Das Spiel ist pausiert.</p>
+      <div class="row" style="margin-top:20px; gap: 12px; flex-direction: column;">
+        <button class="btn btn-large" id="resumeBtn">Fortsetzen (P/Enter)</button>
+        <button class="btn btn-large" id="pauseToLevelSelectBtn">Zur Levelauswahl</button>
+        <button class="btn btn-large" id="pauseToTitleBtn">Zum Titelbildschirm</button>
+      </div>
     </div>
   </div>
 

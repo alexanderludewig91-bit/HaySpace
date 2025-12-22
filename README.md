@@ -27,14 +27,15 @@ Das Projekt ist modular aufgebaut, um Wartbarkeit und Skalierbarkeit zu gewährl
 
 ```
 src/
-├── main.js                 # Einstiegspunkt (106 Zeilen)
+├── main.js                 # Einstiegspunkt (206 Zeilen)
 │                           # - Canvas-Initialisierung
 │                           # - Input-Handling
 │                           # - Game-Loop mit Fixed Timestep
+│                           # - Levelauswahl-UI
 │                           # - Koordiniert Game, Renderer und HUD
 │
 ├── game/
-│   └── Game.js            # Game-Logik (566 Zeilen)
+│   └── Game.js            # Game-Logik (677 Zeilen)
 │                           # - Game-State-Management
 │                           # - Player-Physik und Bewegung
 │                           # - Enemy-Spawning und AI
@@ -46,7 +47,7 @@ src/
 │                           # - Score und Wave-Management
 │
 ├── render/
-│   └── GameRenderer.js    # Rendering-Funktionen (333 Zeilen)
+│   └── GameRenderer.js    # Rendering-Funktionen (393 Zeilen)
 │                           # - drawPlayer() - Spieler-Rendering
 │                           # - drawEnemy() - Gegner-Rendering
 │                           # - drawBoss() - Boss-Rendering
@@ -59,11 +60,13 @@ src/
 │                           # - drawRoundedRect() - Abgerundete Rechtecke
 │
 ├── ui/
-│   └── HUD.js             # HUD-Rendering (130 Zeilen)
+│   └── HUD.js             # HUD-Rendering (261 Zeilen)
 │                           # - Score, Wave, Lives, Weapon-Anzeige
 │                           # - Shield- und Heat-Bars
+│                           # - Speed-Boost-Bar
 │                           # - Boss-Health-Bar (wenn aktiv)
 │                           # - Overheat-Warnung
+│                           # - Score/Wave-Overlay oben rechts
 │
 ├── systems/
 │   ├── AudioSystem.js     # Audio-System
@@ -112,7 +115,9 @@ Das Spiel verwendet einen **Fixed Timestep** für konsistente Physik unabhängig
 ### Game-State-Management
 
 Die `Game`-Klasse verwaltet den gesamten Spielzustand:
-- `state`: 'title', 'play', 'dead', 'win'
+- `state`: 'title', 'levelSelect', 'play', 'dead', 'levelComplete', 'gameComplete'
+- `currentLevel`: Aktuelles Level (1-3)
+- `unlockedLevels`: Array der freigeschalteten Level (gespeichert in LocalStorage)
 - `paused`: Pause-Zustand
 - `hardMode`: Schwierigkeitsmodus
 - Alle Game-Entities (Player, Enemies, Bullets, etc.)
@@ -141,7 +146,7 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
 - **Heat-System**: Overheat bei 100%, muss auf 0% abkühlen
 
 ### Enemy-System
-- **Typen**: Drone, Striker, Tank
+- **Typen**: Je nach Level unterschiedlich (siehe Levelsystem)
 - **AI**: Einfache Bewegungsmuster (sinusförmig, linear)
 - **Shooting**: Cooldown-basiert, zielt auf Player
 - **Drops**: Zufällige Pickups bei Tod
@@ -158,10 +163,48 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
 
 ## Erweiterungsmöglichkeiten
 
+### Levelsystem
+
+Das Spiel besteht aus **3 Leveln**, die nacheinander freigeschaltet werden:
+
+#### Level-Freischaltung
+- **Level 1**: Immer verfügbar
+- **Level 2**: Wird nach Abschluss von Level 1 freigeschaltet
+- **Level 3**: Wird nach Abschluss von Level 2 freigeschaltet
+- Freigeschaltete Level werden im **LocalStorage** gespeichert (Key: `'unlockedLevels'`, Value: JSON-Array wie `[1,2,3]`)
+
+#### Gegner-Typen je Level
+
+**Level 1 (Original-Gegner):**
+- **Drone** (Hue: 340, Rot): Kleiner, schnell, 2-3 HP, Score: 25
+- **Striker** (Hue: 330, Rot): Mittel, bewegt sich seitlich, 4-6 HP, Score: 45
+- **Tank** (Hue: 350, Rot): Groß, langsam, 10-14 HP, Score: 90, hat HP-Bar
+
+**Level 2 (Neue Gegner-Typen):**
+- **Hunter** (Hue: 200, Cyan): Schnell, bewegt sich seitlich, 4-5 HP, Score: 40
+- **Crusher** (Hue: 280, Lila): Mittel, 6-8 HP, Score: 60
+- **Guardian** (Hue: 50, Gelb-Grün): Groß, langsam, 14-18 HP, Score: 110, hat HP-Bar
+
+**Level 3 (Schwerste Gegner):**
+- **Hunter** (wie Level 2)
+- **Crusher** (wie Level 2)
+- **Guardian** (wie Level 2)
+- **Destroyer** (Hue: 10, Rot-Orange): Sehr groß, langsam, 20-24 HP, Score: 150, hat HP-Bar
+
+#### Level-Ende
+- Nach Abschluss eines Levels (Boss besiegt) erscheint ein Overlay mit Gratulation
+- **Level 1 & 2**: Optionen "Nächstes Level" oder "Zur Levelauswahl"
+- **Level 3**: Nur "Zur Levelauswahl" (Spiel-Ende)
+
+#### Code-Stellen
+- **Gegner-Auswahl je Level**: `src/game/Game.js`, Zeilen 194-214 (`spawnWave()`)
+- **Gegner-Eigenschaften**: `src/game/Game.js`, Zeilen 123-189 (`spawnEnemy()`)
+- **Level-Freischaltung**: `src/game/Game.js`, Zeilen 55-69 (`getUnlockedLevels()`, `unlockLevel()`)
+- **Level-Ende-Logik**: `src/game/Game.js`, Zeilen 575-576
+
 ### Geplante Features
 - Couch Co-op für 2-4 Spieler
 - Online Multiplayer mit Lobby
-- Mehrere Level
 - Erfahrungspunkte und Progression
 - Unterschiedliche Waffen
 - Spielstände (Save/Load)
@@ -234,7 +277,7 @@ npm run preview  # Teste Production-Build lokal
 - **Zu groß**: >1000 Zeilen → sollte aufgeteilt werden
 
 Aktuelle Dateigrößen:
-- `main.js`: 106 Zeilen ✅
-- `Game.js`: 566 Zeilen ✅
-- `GameRenderer.js`: 333 Zeilen ✅
-- `HUD.js`: 130 Zeilen ✅
+- `main.js`: 206 Zeilen ✅
+- `Game.js`: 677 Zeilen ✅
+- `GameRenderer.js`: 393 Zeilen ✅
+- `HUD.js`: 261 Zeilen ✅
