@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Modern Arcade Space Shooter</title>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <div id="hud">
+    <div class="panel">
+      <div class="row">
+        <span class="k">Score</span><b id="score">0</b>
+        <span class="k">Wave</span><b id="wave">1</b>
+        <span class="k">Lives</span><b id="lives">3</b>
+        <span class="k">Weapon</span><b id="weapon">1</b>
+        <span class="pill" id="overheatText"></span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <span class="k">Shield</span>
+        <div class="bar" title="Shield"><i id="shieldBar"></i></div>
+        <span class="k">Heat</span>
+        <div class="bar heat" title="Overheat" style="width:160px"><i id="heatBar"></i></div>
+      </div>
+    </div>
+
+    <div class="panel" style="min-width:340px">
+      <div class="row"><span class="k">Boss</span><b id="bossLabel">—</b></div>
+      <div class="row" style="margin-top:10px">
+        <div class="bar boss" style="width:320px"><i id="bossBar" style="width:0%"></i></div>
+      </div>
+      <div class="small" style="margin-top:10px">
+        Move: <b>WASD</b>/<b>Arrows</b> • Shoot: <b>Space</b> • Dash: <b>Shift</b> • Pause: <b>P</b>
+      </div>
+    </div>
+  </div>
+
+  <div id="wrap"><canvas id="c" width="1600" height="900"></canvas></div>
+
+  <div id="overlay">
+    <div class="card">
+      <h1>MODERN ARCADE SPACE SHOOTER</h1>
+      <p>
+        Modernisierte Optik (Apple-Arcade-artiger Look): weiche Lichter, Bloom/Glow, Vektor-Shapes, weiche Trails und glasiges HUD.
+      </p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="startBtn">Start (Enter)</button>
+        <span class="small">R restart • M hard mode</span>
+      </div>
+      <p class="small" style="margin-top:10px">
+        Hinweis: Browser erlauben Audio erst nach Interaktion (Start/Keypress). SFX sind bereits integriert.
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
+
