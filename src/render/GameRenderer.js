@@ -1,7 +1,8 @@
 import { clamp } from '../utils/math.js';
-import { CANVAS_HEIGHT } from '../config.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
 
 const H = CANVAS_HEIGHT;
+const W = CANVAS_WIDTH;
 
 export function drawGlowCircle(ctx, x, y, r, color, a=1){
   ctx.save();
@@ -329,5 +330,57 @@ export function render(ctx, game){
   v.addColorStop(1,'rgba(0,0,0,0.55)');
   ctx.fillStyle = v;
   ctx.fillRect(0,0,W,H);
+
+  // Wave-Meldung rendern (wenn aktiv)
+  if (game.waveMessage > 0) {
+    drawWaveMessage(ctx, game);
+  }
+}
+
+function drawWaveMessage(ctx, game) {
+  const maxTime = 2.5;
+  const t = game.waveMessage / maxTime; // 1.0 = Anfang, 0.0 = Ende
+  
+  // Ein- und Ausfaden: schnell ein, langsam aus
+  let alpha = 1.0;
+  if (t > 0.8) {
+    // Einfaden (erste 20% der Zeit)
+    alpha = 1.0 - ((t - 0.8) / 0.2);
+  } else if (t < 0.3) {
+    // Ausfaden (letzte 30% der Zeit)
+    alpha = t / 0.3;
+  }
+  
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Große, auffällige Schrift
+  ctx.font = '900 64px ui-sans-serif, system-ui';
+  ctx.shadowColor = 'rgba(0,0,0,0.8)';
+  ctx.shadowBlur = 24;
+  
+  // Gradient für den Text (Boss = rot/orange, normale Welle = blau/grün/gelb)
+  const isBossWave = game.wave >= 5;
+  const gradient = ctx.createLinearGradient(W/2, H/2 - 40, W/2, H/2 + 40);
+  if (isBossWave) {
+    // Boss-Welle: Rot-Orange Gradient
+    gradient.addColorStop(0, 'rgba(255,59,107,1)');
+    gradient.addColorStop(0.5, 'rgba(255,159,28,1)');
+    gradient.addColorStop(1, 'rgba(255,209,102,1)');
+  } else {
+    // Normale Welle: Blau-Grün-Gelb Gradient
+    gradient.addColorStop(0, 'rgba(77,227,255,1)');
+    gradient.addColorStop(0.5, 'rgba(108,255,154,1)');
+    gradient.addColorStop(1, 'rgba(255,209,102,1)');
+  }
+  ctx.fillStyle = gradient;
+  
+  // Text: "BOSS WAVE" für Boss, "WAVE X" für normale Wellen
+  const text = isBossWave ? 'BOSS WAVE' : `WAVE ${game.wave}`;
+  ctx.fillText(text, W/2, H/2);
+  
+  ctx.restore();
 }
 

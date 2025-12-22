@@ -35,6 +35,7 @@ export class Game {
     this.score = 0;
     this.wave = 1;
     this.time = 0;
+    this.waveMessage = 0; // Lebensdauer der Wave-Meldung (0 = nicht sichtbar)
 
     this.bullets = [];
     this.enemies = [];
@@ -55,6 +56,7 @@ export class Game {
 
   resetAll(){
     this.score = 0; this.wave = 1; this.time = 0;
+    this.waveMessage = 0;
     this.bullets.length = 0; this.enemies.length = 0; this.particles.length = 0; 
     this.pickups.length = 0; this.enemyBullets.length = 0; this.popups.length = 0;
     this.boss = null;
@@ -109,6 +111,9 @@ export class Game {
   }
 
   spawnWave(n){
+    // Wave-Meldung anzeigen (2.5 Sekunden, damit sie verschwindet bevor Gegner sichtbar werden)
+    this.waveMessage = 2.5;
+    
     const count = 6 + n*2 + (this.hardMode?2:0);
     for (let i=0;i<count;i++){
       const kind = (Math.random()<0.6) ? 'drone' : (Math.random()<0.78 ? 'striker' : 'tank');
@@ -117,6 +122,9 @@ export class Game {
   }
 
   spawnBoss(){
+    // Boss-Meldung anzeigen (2.5 Sekunden, damit sie verschwindet bevor Boss sichtbar wird)
+    this.waveMessage = 2.5;
+    
     this.boss = {
       x: W*0.5, y: -160, vx: 0, vy: 85, r: 58,
       hpMax: this.hardMode ? 520 : 420,
@@ -296,6 +304,11 @@ export class Game {
     }
 
     this.time += dt;
+    
+    // Wave-Meldung aktualisieren
+    if (this.waveMessage > 0) {
+      this.waveMessage = Math.max(0, this.waveMessage - dt);
+    }
 
     this.starfield.update(dt);
     this.nebula.update(dt);
@@ -491,10 +504,12 @@ export class Game {
 
     if (!this.boss){
       if (this.enemies.length === 0){
-        if (this.wave >= 4){
+        this.wave += 1;
+        if (this.wave >= 5){
+          // Welle 5 = Boss
           this.spawnBoss();
         } else {
-          this.wave += 1;
+          // Wellen 1-4 = Normale Gegner
           this.spawnWave(this.wave);
         }
       }

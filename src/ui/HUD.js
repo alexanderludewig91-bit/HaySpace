@@ -162,10 +162,8 @@ export function drawHUD(ctx, game) {
   
   const speedPct = clamp((game.player.speedBoost - 1.0) / 1.0, 0, 1); // 1.0 = 0%, 2.0 = 100%
   if (speedPct > 0) {
-    const grad = ctx.createLinearGradient(speedBarX, firstRowBarY, speedBarX + speedBarW, firstRowBarY);
-    grad.addColorStop(0, '#ffd166');
-    grad.addColorStop(1, '#ff9f1c');
-    ctx.fillStyle = grad;
+    // Helles, gleichbleibendes Gelb (kein Gradient)
+    ctx.fillStyle = '#ffd700'; // Goldgelb
     drawRoundedRect(ctx, speedBarX, firstRowBarY, speedBarW * speedPct, barH, 999);
     ctx.fill();
   }
@@ -213,9 +211,10 @@ export function drawHUD(ctx, game) {
 
   const heatPct = clamp(game.player.heat, 0, 100) / 100;
   if (heatPct > 0) {
+    // Farbverlauf von hellem Orange zu dunklem Rot
     const grad = ctx.createLinearGradient(heatX, secondRowBarY, heatX + heatBarW, secondRowBarY);
-    grad.addColorStop(0, '#ffd166');
-    grad.addColorStop(1, '#ff3b6b');
+    grad.addColorStop(0, '#ff9f1c'); // Helles Orange
+    grad.addColorStop(1, '#cc0000'); // Dunkles Rot
     ctx.fillStyle = grad;
     drawRoundedRect(ctx, heatX, secondRowBarY, heatBarW * heatPct, barH, 999);
     ctx.fill();
@@ -228,33 +227,34 @@ export function drawHUD(ctx, game) {
     ctx.fillText('OVERHEAT', heatX + heatBarW + 10, secondRowLabelY);
   }
 
-  // Boss Bar (wenn vorhanden) - rechts oben, nicht im Hauptpanel
+  // Boss Bar (wenn vorhanden) - oben links
   if (game.boss) {
-    const rightX = W - padX - 338;
-    const bossBarY = secondRowBarY; // Gleiche Zeile wie Shield/Heat Bars
+    const bossX = 20; // Oben links, wie Score-Overlay
+    const bossLabelY = 20;
+    const bossBarY = bossLabelY + labelHeight;
     const bossBarW = 320;
 
     ctx.fillStyle = 'rgba(255,255,255,.10)';
-    drawRoundedRect(ctx, rightX, bossBarY, bossBarW, barH, 999);
+    drawRoundedRect(ctx, bossX, bossBarY, bossBarW, barH, 999);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,.12)';
     ctx.stroke();
 
     const bossPct = clamp(game.boss.hp / game.boss.hpMax, 0, 1);
-    const grad = ctx.createLinearGradient(rightX, bossBarY, rightX + bossBarW, bossBarY);
+    const grad = ctx.createLinearGradient(bossX, bossBarY, bossX + bossBarW, bossBarY);
     grad.addColorStop(0, '#ff3b6b');
     grad.addColorStop(1, '#ff9f1c');
     ctx.fillStyle = grad;
-    drawRoundedRect(ctx, rightX, bossBarY, bossBarW * bossPct, barH, 999);
+    drawRoundedRect(ctx, bossX, bossBarY, bossBarW * bossPct, barH, 999);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(245,250,255,.62)';
     ctx.font = '500 13px ui-sans-serif, system-ui';
-    ctx.fillText('Boss', rightX, secondRowLabelY);
+    ctx.fillText('Boss', bossX, bossLabelY);
 
     ctx.fillStyle = 'rgba(245,250,255,.92)';
     ctx.font = '600 13px ui-sans-serif, system-ui';
-    ctx.fillText('DREAD CORE', rightX + 60, secondRowLabelY);
+    ctx.fillText('DREAD CORE', bossX + 60, bossLabelY);
   }
 
   ctx.restore();
