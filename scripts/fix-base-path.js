@@ -48,18 +48,28 @@ if (html === beforeReplace) {
 writeFileSync(indexPath, html, 'utf-8');
 
 const fixedScript = html.match(/<script[^>]*src="[^"]*"/)?.[0];
-const fixedCss = html.match(/<link[^>]*href="[^"]*"[^>]*stylesheet/)?.[0];
+// Nur Asset-CSS prüfen, nicht externe Links
+const fixedAssetCss = html.match(/<link[^>]*href="[^"]*assets[^"]*"[^>]*stylesheet/)?.[0];
 
 console.log('Fixed script:', fixedScript);
-console.log('Fixed CSS:', fixedCss);
+console.log('Fixed asset CSS:', fixedAssetCss);
 
-if (fixedScript && fixedScript.includes(base) && fixedCss && fixedCss.includes(base)) {
+// Prüfe nur, ob Script-Pfad korrekt ist
+// Asset-CSS ist optional (kann auch fehlen, wenn nur externe CSS-Links vorhanden sind)
+const scriptIsFixed = fixedScript && fixedScript.includes(base);
+const assetCssIsFixed = !fixedAssetCss || fixedAssetCss.includes(base);
+
+if (scriptIsFixed && assetCssIsFixed) {
   console.log('✓ Base path fixed successfully!');
   process.exit(0);
 } else {
   console.error('ERROR: Base path fix failed!');
-  console.error('Script still contains:', fixedScript);
-  console.error('CSS still contains:', fixedCss);
+  if (!scriptIsFixed) {
+    console.error('Script path is incorrect:', fixedScript);
+  }
+  if (fixedAssetCss && !assetCssIsFixed) {
+    console.error('Asset CSS path is incorrect:', fixedAssetCss);
+  }
   process.exit(1);
 }
 
