@@ -35,7 +35,20 @@ jobs:
         run: npm run build
         
       - name: Fix base path
-        run: node scripts/fix-base-path.js
+        run: |
+          echo "Repository name: ${{ github.event.repository.name }}"
+          echo "Current directory: $(pwd)"
+          echo "Dist contents:"
+          ls -la dist/ || echo "dist/ not found"
+          echo "Script exists:"
+          ls -la scripts/fix-base-path.js || echo "Script not found"
+          echo "Running fix script..."
+          node scripts/fix-base-path.js
+          echo "Verifying fix..."
+          echo "First 20 lines of fixed HTML:"
+          head -20 dist/index.html
+          echo "Checking for assets paths:"
+          grep -E '(src|href)=".*assets' dist/index.html || echo "WARNING: No assets found in HTML"
         env:
           GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
         continue-on-error: false
