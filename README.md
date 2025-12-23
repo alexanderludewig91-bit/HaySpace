@@ -304,12 +304,81 @@ Das Spiel besteht aus **3 Leveln**, die nacheinander freigeschaltet werden:
 
 ## Deployment
 
-### Web
-- `npm run build` erstellt `dist/` Ordner
-- Kann auf GitHub Pages, Netlify, Vercel, etc. deployed werden
-- Alle Assets werden automatisch optimiert
+### GitHub Pages (Aktuell implementiert)
 
-### Apple TV
+Das Spiel ist automatisch für GitHub Pages konfiguriert und wird bei jedem Push automatisch deployed.
+
+#### Automatisches Deployment
+
+1. **GitHub Actions Workflow**: `.github/workflows/deploy.yml`
+   - Wird automatisch bei jedem Push auf `main` ausgelöst
+   - Baut das Projekt mit Vite
+   - Korrigiert Base-Pfade für GitHub Pages Subpath
+   - Deployed automatisch zu GitHub Pages
+
+2. **GitHub Pages aktivieren**:
+   - Repository Settings → Pages
+   - Source: "GitHub Actions"
+   - Das Spiel ist dann erreichbar unter: `https://[username].github.io/[repository-name]/`
+
+#### Base-Path-Konfiguration
+
+GitHub Pages hostet das Spiel unter einem Subpath (z.B. `/HaySpace/`), nicht im Root. Das Projekt verwendet ein Post-Build-Script, um alle Asset-Pfade automatisch anzupassen:
+
+- **Script**: `scripts/fix-base-path.js`
+- **Funktion**: Ersetzt alle absoluten Pfade (`/assets/`, `/backround-music/`, `/hayspace-cover.png`) mit dem korrekten Base-Path
+- **Automatisch**: Wird im GitHub Actions Workflow ausgeführt
+
+#### Manuelles Deployment
+
+Falls du manuell deployen möchtest:
+
+```bash
+# Build erstellen
+npm run build
+
+# Base-Path für GitHub Pages korrigieren (wenn nötig)
+# Das Script wird automatisch im GitHub Actions Workflow ausgeführt
+# Für lokales Testen: Setze GITHUB_REPOSITORY_NAME Umgebungsvariable
+$env:GITHUB_REPOSITORY_NAME="HaySpace"
+node scripts/fix-base-path.js
+
+# dist/ Ordner zu gh-pages Branch pushen (alternativ zu GitHub Actions)
+```
+
+#### Troubleshooting
+
+**Problem: Weißer Bildschirm oder Assets laden nicht**
+- **Ursache**: Browser-Cache (besonders Chrome)
+- **Lösung**: 
+  - Hard Refresh: `Ctrl + Shift + R` (Windows) oder `Cmd + Shift + R` (Mac)
+  - DevTools öffnen → Rechtsklick auf Reload → "Empty Cache and Hard Reload"
+  - Cache komplett löschen: `Ctrl + Shift + Delete`
+
+**Problem: Musik oder Cover-Bild fehlt**
+- **Ursache**: Pfade in JavaScript/CSS-Dateien nicht korrigiert
+- **Lösung**: Stelle sicher, dass `scripts/fix-base-path.js` im GitHub Actions Workflow ausgeführt wird
+
+**Problem: GitHub Pages zeigt 404**
+- **Ursache**: GitHub Pages nicht aktiviert oder falsch konfiguriert
+- **Lösung**: 
+  1. Repository Settings → Pages
+  2. Source: "GitHub Actions" wählen
+  3. Falls nicht verfügbar: Zuerst manuell von `gh-pages` Branch deployen, dann zu GitHub Actions wechseln
+
+### Andere Deployment-Optionen
+
+#### Netlify / Vercel
+- `npm run build` erstellt `dist/` Ordner
+- `dist/` Ordner hochladen oder Git-Integration nutzen
+- **Wichtig**: Base-Path auf `/` setzen (nicht wie bei GitHub Pages)
+
+#### Eigener Server
+- `npm run build` ausführen
+- `dist/` Ordner auf Server hochladen
+- Web-Server konfigurieren (z.B. Nginx, Apache)
+
+### Apple TV (Zukünftig)
 - Option 1: Native tvOS App (Swift/SwiftUI)
 - Option 2: Web-App im TV-Browser
 - Option 3: Hybrid-Ansatz (WebView in Native App)
