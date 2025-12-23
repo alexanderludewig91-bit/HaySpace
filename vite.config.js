@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/', // Wird durch --base Flag im Build-Befehl überschrieben
+  base: '/', // Wird durch build.js überschrieben
   server: {
     port: 3000,
     open: true
