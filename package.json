@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "fix-base": "node scripts/fix-base-path.js",
-    "build:pages": "vite build && npm run fix-base",
+    "build:pages": "vite build && node scripts/fix-base-path.js",
     "preview": "vite preview"
   },
   "devDependencies": {
