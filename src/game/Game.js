@@ -50,6 +50,7 @@ export class Game {
     this.nebula = new Nebula();
 
     this.boss = null;
+    this.bossDefeated = false; // Flag für besiegten Boss
   }
 
   getUnlockedLevels() {
@@ -83,6 +84,7 @@ export class Game {
     this.bullets.length = 0; this.enemies.length = 0; this.particles.length = 0; 
     this.pickups.length = 0; this.enemyBullets.length = 0; this.popups.length = 0;
     this.boss = null;
+    this.bossDefeated = false;
     
     // Player zurücksetzen
     this.player.shield = this.player.shieldMax;
@@ -575,8 +577,9 @@ export class Game {
           if (this.currentLevel < 3) {
             this.unlockLevel(this.currentLevel + 1);
           }
-          this.state = 'levelComplete';
-          return true; // Signal für Level-Ende
+          // Flag setzen, dass Boss besiegt wurde, aber Spiel läuft noch weiter
+          this.bossDefeated = true;
+          // State bleibt 'play', damit das Spiel weiterläuft
         }
       }
       if (hit) continue;
@@ -599,7 +602,8 @@ export class Game {
     }
 
     if (!this.boss){
-      if (this.enemies.length === 0){
+      // Keine neuen Wellen spawnten, wenn Boss bereits besiegt wurde
+      if (!this.bossDefeated && this.enemies.length === 0){
         this.wave += 1;
         if (this.wave >= 5){
           // Welle 5 = Boss

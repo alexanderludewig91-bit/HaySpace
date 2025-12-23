@@ -5,6 +5,7 @@ import { Game } from './game/Game.js';
 import { render } from './render/GameRenderer.js';
 import { drawHUD, drawScoreOverlay } from './ui/HUD.js';
 import { Starfield } from './background/Starfield.js';
+import { initDevMode } from './ui/DevMode.js';
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -18,6 +19,9 @@ const overlay = document.getElementById('overlay');
 const titleScreen = document.getElementById('titleScreen');
 const startJourneySection = document.getElementById('startJourneySection');
 const mainMenuSection = document.getElementById('mainMenuSection');
+const mainMenuCard = document.getElementById('mainMenuCard');
+const mainMenuButtons = document.getElementById('mainMenuButtons');
+const levelSelectContent = document.getElementById('levelSelectContent');
 const levelSelect = document.getElementById('levelSelect');
 const levelList = document.getElementById('levelList');
 const levelComplete = document.getElementById('levelComplete');
@@ -30,7 +34,6 @@ const settingsBtn = document.getElementById('settingsBtn');
 const backToTitleFromMainBtn = document.getElementById('backToTitleFromMainBtn');
 const resumeBtn = document.getElementById('resumeBtn');
 const pauseToLevelSelectBtn = document.getElementById('pauseToLevelSelectBtn');
-const pauseToTitleBtn = document.getElementById('pauseToTitleBtn');
 const backToTitleBtn = document.getElementById('backToTitleBtn');
 const nextLevelBtn = document.getElementById('nextLevelBtn');
 const backToLevelSelectBtn = document.getElementById('backToLevelSelectBtn');
@@ -44,6 +47,8 @@ const cancelNewGameBtn = document.getElementById('cancelNewGameBtn');
 // Input
 const keys = new Set();
 let hardMode = false;
+let levelCompleteDelayStarted = false;
+let levelCompleteTime = 0;
 
 // Game instance
 const game = new Game();
@@ -104,55 +109,124 @@ let titleStarfield = createTitleStarfield();
 window.addEventListener('resize', resizeTitleStarfield);
 resizeTitleStarfield();
 
+// Starfield für Levelauswahl entfernt - nur auf Titelbildschirm
+
 // Levelauswahl rendern
 function renderLevelSelect() {
   levelList.innerHTML = '';
   const unlocked = game.getUnlockedLevels();
   
+  // Erst alle Buttons erstellen und zum DOM hinzufügen
+  const buttons = [];
   for (let i = 1; i <= 3; i++) {
     const levelBtn = document.createElement('button');
     levelBtn.className = 'btn';
     levelBtn.style.width = '100%';
-    levelBtn.style.textAlign = 'left';
-    levelBtn.style.padding = '16px';
+    levelBtn.style.textAlign = 'center';
+    levelBtn.style.padding = '20px 30px';
     levelBtn.style.display = 'flex';
-    levelBtn.style.justifyContent = 'space-between';
+    levelBtn.style.justifyContent = 'center';
     levelBtn.style.alignItems = 'center';
+    levelBtn.style.gap = '10px';
+    
+    // Für Animation vorbereiten - komplett unsichtbar
+    levelBtn.style.opacity = '0';
+    levelBtn.style.transform = 'scale(0.9) translateY(10px)';
+    levelBtn.style.visibility = 'hidden'; // Zusätzlich verstecken
     
     if (unlocked.includes(i)) {
-      levelBtn.innerHTML = `<span><b>Level ${i}</b></span><span style="opacity: 0.7;">▶</span>`;
+      levelBtn.innerHTML = `<span><b>LEVEL ${i}</b></span>`;
       levelBtn.onclick = () => startLevel(i);
     } else {
-      levelBtn.innerHTML = `<span style="opacity: 0.5;"><b>Level ${i}</b> 🔒</span>`;
+      levelBtn.innerHTML = `<span><b>LEVEL ${i}</b> 🔒</span>`;
       levelBtn.disabled = true;
-      levelBtn.style.opacity = '0.5';
       levelBtn.style.cursor = 'not-allowed';
     }
     
     levelList.appendChild(levelBtn);
+    buttons.push({ btn: levelBtn, index: i, unlocked: unlocked.includes(i) });
   }
+  
+  // Nachdem alle Buttons gerendert wurden, Animation starten
+  requestAnimationFrame(() => {
+    buttons.forEach(({ btn, index, unlocked }) => {
+      btn.style.visibility = 'visible'; // Sichtbar machen für Animation
+      
+      setTimeout(() => {
+        btn.classList.add('level-button-enter');
+        if (index === 2) btn.classList.add('level-button-enter-delay-1');
+        if (index === 3) btn.classList.add('level-button-enter-delay-2');
+        
+        // Animation-Klassen nach Animation entfernen
+        setTimeout(() => {
+          btn.classList.remove('level-button-enter', 'level-button-enter-delay-1', 'level-button-enter-delay-2');
+          btn.style.opacity = '';
+          btn.style.transform = '';
+          // Bei gesperrten Buttons Opacity auf 0.5 setzen
+          if (!unlocked) {
+            btn.style.opacity = '0.5';
+          }
+        }, 500);
+      }, 200 + (index - 1) * 100); // 200ms, 300ms, 400ms Delay
+    });
+  });
 }
 
 function showScreen(screenName) {
-  titleScreen.classList.add('hidden');
-  levelSelect.classList.add('hidden');
+  // titleScreen wird nicht versteckt, wenn levelSelect angezeigt wird (gleiche Karte)
+  if (screenName !== 'levelSelect' && screenName !== 'title') {
+    titleScreen.classList.add('hidden');
+  }
+  // levelSelect wird nur versteckt, wenn es nicht angezeigt werden soll
+  if (screenName !== 'levelSelect') {
+    levelSelect.classList.add('hidden');
+  }
   levelComplete.classList.add('hidden');
   gameComplete.classList.add('hidden');
   pauseMenu.classList.add('hidden');
-  newGameWarning.classList.add('hidden');
+  const newGameWarningContainer = document.getElementById('newGameWarningContainer');
+  if (newGameWarningContainer) {
+    newGameWarningContainer.classList.add('hidden');
+  }
+  // devModePanel wird NICHT hier versteckt, da es ein Overlay ist, das unabhängig funktioniert
   
   if (screenName === 'title') {
     titleScreen.classList.remove('hidden');
     startJourneySection.classList.remove('hidden');
     mainMenuSection.classList.add('hidden');
+    // Levelauswahl-Content verstecken, Hauptmenü-Buttons wieder anzeigen
+    if (levelSelectContent) {
+      levelSelectContent.style.display = 'none';
+    }
+    if (mainMenuButtons) {
+      mainMenuButtons.style.display = 'flex';
+      mainMenuButtons.style.flexDirection = 'column';
+      mainMenuButtons.style.gap = '16px';
+    }
     // Sterne wieder anzeigen, wenn zum Titelbildschirm zurückgekehrt wird
     titleStarfieldVisible = true;
     titleStarfieldCanvas.style.opacity = '1';
     titleStarfieldCanvas.style.transition = 'opacity 0.6s ease-in';
   }
   else if (screenName === 'levelSelect') {
-    levelSelect.classList.remove('hidden');
-    renderLevelSelect();
+    // titleScreen bleibt sichtbar (gleiche Karte)
+    titleScreen.classList.remove('hidden');
+    // startJourneySection verstecken
+    startJourneySection.classList.add('hidden');
+    // Hauptmenü-Section muss sichtbar bleiben, da die Karte dort ist
+    mainMenuSection.classList.remove('hidden');
+    // levelSelect-Screen wird nicht benötigt, da alles in titleScreen ist
+    // levelSelect bleibt versteckt, da die Karte in titleScreen ist
+    // Hauptmenü-Buttons ausblenden
+    if (mainMenuButtons) {
+      mainMenuButtons.style.display = 'none';
+    }
+    // Levelauswahl-Content einblenden
+    if (levelSelectContent) {
+      levelSelectContent.style.display = 'block';
+      // Sanfte Animation für Levelauswahl-Buttons
+      renderLevelSelect();
+    }
   }
   else if (screenName === 'levelComplete') levelComplete.classList.remove('hidden');
   else if (screenName === 'gameComplete') gameComplete.classList.remove('hidden');
@@ -160,8 +234,17 @@ function showScreen(screenName) {
     pauseMenu.classList.remove('hidden');
   }
   else if (screenName === 'newGameWarning') {
-    newGameWarning.classList.remove('hidden');
+    // Titelbildschirm sichtbar lassen, damit das Menü im Hintergrund bleibt
+    titleScreen.classList.remove('hidden');
+    // Hauptmenü-Section sichtbar lassen
+    mainMenuSection.classList.remove('hidden');
+    // Warnmeldung-Container anzeigen (enthält Overlay und Warnmeldung)
+    const newGameWarningContainer = document.getElementById('newGameWarningContainer');
+    if (newGameWarningContainer) {
+      newGameWarningContainer.classList.remove('hidden');
+    }
   }
+  // devMode wird nicht über showScreen gehandhabt, da es ein Overlay ist
   
   if (screenName !== 'pause') {
     overlay.classList.remove('hidden');
@@ -201,6 +284,23 @@ function startLevel(level) {
   game.paused = false;
   game.hardMode = hardMode;
   overlay.classList.add('hidden');
+  // Alle Screens verstecken, damit Canvas wieder sichtbar wird
+  titleScreen.classList.add('hidden');
+  levelSelect.classList.add('hidden');
+  // Levelauswahl-Content verstecken
+  const levelSelectContent = document.getElementById('levelSelectContent');
+  if (levelSelectContent) {
+    levelSelectContent.style.display = 'none';
+  }
+  // Hauptmenü-Buttons verstecken
+  const mainMenuButtons = document.getElementById('mainMenuButtons');
+  if (mainMenuButtons) {
+    mainMenuButtons.style.display = 'none';
+  }
+  // Delay-Variablen zurücksetzen
+  levelCompleteDelayStarted = false;
+  levelCompleteTime = 0;
+  game.bossDefeated = false;
   game.spawnWave(game.wave);
 }
 
@@ -256,25 +356,42 @@ startJourneyBtn.addEventListener('click', () => {
     // Hauptmenü Section sichtbar machen (aber noch unsichtbar für Animation)
     mainMenuSection.classList.remove('hidden');
     
+    // Hauptmenü-Karte für Animation vorbereiten
+    const mainMenuCard = mainMenuSection.querySelector('.card');
+    if (mainMenuCard) {
+      mainMenuCard.style.opacity = '0';
+      mainMenuCard.style.transform = 'scale(0.85) translateY(15px)';
+      mainMenuCard.classList.add('level-select-enter');
+      
+      setTimeout(() => {
+        mainMenuCard.classList.add('level-select-enter');
+        setTimeout(() => {
+          mainMenuCard.classList.remove('level-select-enter');
+          mainMenuCard.style.opacity = '';
+          mainMenuCard.style.transform = '';
+        }, 600);
+      }, 50);
+    }
+    
     // Buttons nacheinander einblenden mit Animation
     const menuButtons = [newGameBtn, continueBtn, settingsBtn, backToTitleFromMainBtn];
     menuButtons.forEach((btn, index) => {
       btn.style.opacity = '0';
-      btn.style.transform = 'scale(0.3) translateY(40px)';
+      btn.style.transform = 'scale(0.9) translateY(10px)';
       
       setTimeout(() => {
-        btn.classList.add('main-menu-enter');
-        if (index === 1) btn.classList.add('main-menu-enter-delay-1');
-        if (index === 2) btn.classList.add('main-menu-enter-delay-2');
-        if (index === 3) btn.classList.add('main-menu-enter-delay-3');
+        btn.classList.add('level-button-enter');
+        if (index === 1) btn.classList.add('level-button-enter-delay-1');
+        if (index === 2) btn.classList.add('level-button-enter-delay-2');
+        if (index === 3) btn.classList.add('level-button-enter-delay-2'); // Gleiche Delay wie Button 2
         
         // Animation-Klassen nach Animation entfernen
         setTimeout(() => {
-          btn.classList.remove('main-menu-enter', 'main-menu-enter-delay-1', 'main-menu-enter-delay-2', 'main-menu-enter-delay-3');
+          btn.classList.remove('level-button-enter', 'level-button-enter-delay-1', 'level-button-enter-delay-2');
           btn.style.opacity = '';
           btn.style.transform = '';
-        }, 900); // Etwas länger, damit auch der letzte Button fertig ist
-      }, 50);
+        }, 500);
+      }, 200 + (index * 100)); // 200ms, 300ms, 400ms, 500ms Delay
     });
   }, 600);
 });
@@ -293,31 +410,96 @@ newGameBtn.addEventListener('click', () => {
   } else {
     // Kein Spielstand vorhanden, direkt fortfahren
     resetLocalStorage();
-    showScreen('levelSelect');
+    transitionToLevelSelect();
   }
 });
+
+// Funktion für Übergang zur Levelauswahl (Karte bleibt, Buttons werden getauscht)
+function transitionToLevelSelect() {
+  // Sicherstellen, dass titleScreen und mainMenuSection sichtbar sind
+  // WICHTIG: Das muss SOFORT passieren, nicht erst nach dem Timeout
+  titleScreen.classList.remove('hidden');
+  mainMenuSection.classList.remove('hidden');
+  startJourneySection.classList.add('hidden');
+  
+  // Hauptmenü-Buttons ausblenden mit Animation
+  const menuButtons = [newGameBtn, continueBtn, settingsBtn, backToTitleFromMainBtn];
+  menuButtons.forEach((btn, index) => {
+    btn.classList.add('start-journey-exit');
+  });
+  
+  setTimeout(() => {
+    // Hauptmenü-Buttons verstecken
+    if (mainMenuButtons) {
+      mainMenuButtons.style.display = 'none';
+    }
+    
+    // WICHTIG: Karte auf Hauptmenü-Größe setzen, BEVOR Content eingeblendet wird
+    // Dies verhindert, dass die Karte schlagartig größer wird
+    if (mainMenuCard) {
+      mainMenuCard.style.width = 'min(500px, 92vw)';
+      mainMenuCard.style.maxWidth = '500px';
+    }
+    
+    // Levelauswahl rendern BEVOR der Content eingeblendet wird
+    renderLevelSelect();
+    
+    // Levelauswahl-Content einblenden (aber Karte bleibt bei kleiner Größe)
+    if (levelSelectContent) {
+      levelSelectContent.style.display = 'block';
+    }
+    
+    // Levelauswahl-Screen anzeigen
+    showScreen('levelSelect');
+    
+    // Karte vergrößern mit Animation (nachdem alles gerendert wurde)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (mainMenuCard) {
+          mainMenuCard.classList.add('card-expanding');
+          // Nach Animation die explizite Breite entfernen, damit die Standard-Card-Größe greift
+          setTimeout(() => {
+            mainMenuCard.classList.remove('card-expanding');
+            mainMenuCard.style.width = '';
+            mainMenuCard.style.maxWidth = '';
+          }, 600);
+        }
+      });
+    });
+  }, 600);
+}
 
 // Bestätigen: Neues Spiel starten
 confirmNewGameBtn.addEventListener('click', () => {
   ensureAudio();
+  // Warnmeldung-Container verstecken
+  const newGameWarningContainer = document.getElementById('newGameWarningContainer');
+  if (newGameWarningContainer) {
+    newGameWarningContainer.classList.add('hidden');
+  }
   resetLocalStorage();
-  showScreen('levelSelect');
+  transitionToLevelSelect();
 });
 
 // Abbrechen: Zurück zum Hauptmenü
 cancelNewGameBtn.addEventListener('click', () => {
   ensureAudio();
-  showScreen('title');
-  // Hauptmenü wieder anzeigen
-  startJourneySection.classList.add('hidden');
-  mainMenuSection.classList.remove('hidden');
+  // Warnmeldung-Container verstecken (enthält Overlay und Warnmeldung)
+  const newGameWarningContainer = document.getElementById('newGameWarningContainer');
+  if (newGameWarningContainer) {
+    newGameWarningContainer.classList.add('hidden');
+  }
+  // titleScreen und mainMenuSection bleiben sichtbar (waren bereits sichtbar)
+  // Sterne NICHT anzeigen, da wir im Hauptmenü sind, nicht auf der Titelseite
+  // startJourneySection bleibt versteckt
+  // mainMenuSection bleibt sichtbar
 });
 
 // Continue Button
 continueBtn.addEventListener('click', () => {
   ensureAudio();
   loadFromLocalStorage();
-  showScreen('levelSelect');
+  transitionToLevelSelect();
 });
 
 // Settings Button (Placeholder)
@@ -366,7 +548,66 @@ backToTitleFromMainBtn.addEventListener('click', () => {
 });
 
 backToTitleBtn.addEventListener('click', () => {
-  showScreen('title');
+  ensureAudio();
+  // Levelauswahl-Buttons ausblenden mit Animation
+  const buttons = levelList.querySelectorAll('.btn');
+  buttons.forEach((btn, index) => {
+    btn.classList.add('start-journey-exit');
+  });
+  
+  // Auch den Back-Button ausblenden
+  backToTitleBtn.classList.add('start-journey-exit');
+  
+  setTimeout(() => {
+    // Levelauswahl-Content verstecken
+    if (levelSelectContent) {
+      levelSelectContent.style.display = 'none';
+    }
+    
+    // Karte verkleinern mit Animation (zurück zur Hauptmenü-Größe)
+    if (mainMenuCard) {
+      // Entferne expand-Animation
+      mainMenuCard.classList.remove('card-expanding');
+      // Sanft zurücksetzen zur Hauptmenü-Größe
+      requestAnimationFrame(() => {
+        mainMenuCard.style.width = 'min(500px, 92vw)';
+        setTimeout(() => {
+          mainMenuCard.style.width = '';
+        }, 600);
+      });
+    }
+    
+    // Hauptmenü-Buttons wieder einblenden
+    if (mainMenuButtons) {
+      mainMenuButtons.style.display = 'flex';
+      mainMenuButtons.style.flexDirection = 'column';
+      mainMenuButtons.style.gap = '16px';
+      
+      // Hauptmenü-Buttons einblenden mit Animation
+      const menuButtons = [newGameBtn, continueBtn, settingsBtn, backToTitleFromMainBtn];
+      menuButtons.forEach((btn, index) => {
+        btn.style.opacity = '0';
+        btn.style.transform = 'scale(0.9) translateY(10px)';
+        btn.classList.remove('start-journey-exit');
+        
+        setTimeout(() => {
+          btn.classList.add('level-button-enter');
+          if (index === 1) btn.classList.add('level-button-enter-delay-1');
+          if (index === 2) btn.classList.add('level-button-enter-delay-2');
+          if (index === 3) btn.classList.add('level-button-enter-delay-2');
+          
+          setTimeout(() => {
+            btn.classList.remove('level-button-enter', 'level-button-enter-delay-1', 'level-button-enter-delay-2');
+            btn.style.opacity = '';
+            btn.style.transform = '';
+          }, 500);
+        }, 50 + (index * 100));
+      });
+    }
+    // Back-Button Animation entfernen
+    backToTitleBtn.classList.remove('start-journey-exit');
+    // titleScreen und mainMenuSection bleiben sichtbar (kein showScreen('title') nötig)
+  }, 600);
 });
 
 nextLevelBtn.addEventListener('click', () => {
@@ -391,13 +632,13 @@ resumeBtn.addEventListener('click', () => {
 });
 
 pauseToLevelSelectBtn.addEventListener('click', () => {
+  // Spiel beenden
+  game.state = 'menu';
   game.paused = false;
-  showScreen('levelSelect');
-});
-
-pauseToTitleBtn.addEventListener('click', () => {
-  game.paused = false;
-  showScreen('title');
+  overlay.classList.add('hidden');
+  pauseMenu.classList.add('hidden');
+  // Zur Levelauswahl navigieren
+  transitionToLevelSelect();
 });
 
 function gameLoop(){
@@ -410,22 +651,41 @@ function gameLoop(){
     accumulator -= fixedDT;
 
     if (game.state === 'play' && !game.paused) {
-      const gameOver = game.update(dt, keys);
-      if (gameOver) {
-        if (game.state === 'dead') {
-          overlay.classList.remove('hidden');
-          titleScreen.querySelector('h1').textContent = 'GAME OVER';
-          showScreen('title');
-        } else if (game.state === 'levelComplete') {
-          if (game.currentLevel === 3) {
-            showScreen('gameComplete');
-          } else {
-            levelCompleteTitle.textContent = `LEVEL ${game.currentLevel} GESCHAFFT!`;
-            levelCompleteText.textContent = 'Gratulation! Du hast das Level erfolgreich abgeschlossen.';
-            nextLevelBtn.style.display = 'block';
-            showScreen('levelComplete');
-          }
+      game.update(dt, keys);
+      
+      // Prüfen, ob Boss besiegt wurde
+      if (game.bossDefeated && !levelCompleteDelayStarted) {
+        // Delay-Timer starten, wenn Boss besiegt wurde
+        levelCompleteDelayStarted = true;
+        levelCompleteTime = performance.now();
+      }
+      
+      // Prüfen, ob Spieler tot ist
+      if (game.state === 'dead') {
+        overlay.classList.remove('hidden');
+        titleScreen.querySelector('h1').textContent = 'GAME OVER';
+        showScreen('title');
+      }
+    }
+    
+    // Level-Complete-Delay-Logik außerhalb der Play-State-Bedingung,
+    // damit sie in jedem Frame geprüft wird
+    if (game.bossDefeated && levelCompleteDelayStarted) {
+      // 2 Sekunden warten, bevor das Menü angezeigt wird
+      if (performance.now() - levelCompleteTime >= 2000) {
+        // State auf levelComplete setzen und Menü anzeigen
+        game.state = 'levelComplete';
+        if (game.currentLevel === 3) {
+          showScreen('gameComplete');
+        } else {
+          levelCompleteTitle.textContent = `LEVEL ${game.currentLevel} COMPLETE!`;
+          levelCompleteText.textContent = 'Congratulations! You have successfully completed the level.';
+          nextLevelBtn.style.display = 'block';
+          showScreen('levelComplete');
         }
+        // Reset für nächstes Level
+        levelCompleteDelayStarted = false;
+        game.bossDefeated = false;
       }
     }
   }
@@ -489,6 +749,9 @@ function titleStarfieldLoop() {
   
   requestAnimationFrame(titleStarfieldLoop);
 }
+
+// Dev Mode initialisieren
+initDevMode(game, resetLocalStorage);
 
 requestAnimationFrame(gameLoop);
 requestAnimationFrame(titleStarfieldLoop);
