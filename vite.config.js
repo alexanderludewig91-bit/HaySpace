@@ -1,12 +1,7 @@
 import { defineConfig } from 'vite';
 
-// Base-Pfad für GitHub Pages
-// Wird als Umgebungsvariable VITE_BASE_PATH gesetzt (im GitHub Actions Workflow)
-// Falls nicht gesetzt (lokale Entwicklung), bleibt es '/'
-const base = process.env.VITE_BASE_PATH || '/';
-
 export default defineConfig({
-  base: base,
+  base: '/', // Wird durch --base Flag im Build-Befehl überschrieben
   server: {
     port: 3000,
     open: true
