@@ -69,6 +69,28 @@
                 <button class="btn btn-large" id="backToTitleBtn">Back</button>
               </div>
             </div>
+            <div id="settingsContent" style="display: none;">
+              <h1>SETTINGS</h1>
+              <div style="display: flex; flex-direction: column; gap: 24px; margin-top: 20px; min-width: 400px;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="font-size: 14px; color: rgba(245,250,255,0.9);">Music Volume</label>
+                    <span id="musicVolumeValue" style="font-size: 14px; color: rgba(245,250,255,0.7); min-width: 40px; text-align: right;">50%</span>
+                  </div>
+                  <input type="range" id="musicVolumeSlider" min="0" max="100" value="50" class="volume-slider">
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="font-size: 14px; color: rgba(245,250,255,0.9);">Sound Effects Volume</label>
+                    <span id="sfxVolumeValue" style="font-size: 14px; color: rgba(245,250,255,0.7); min-width: 40px; text-align: right;">100%</span>
+                  </div>
+                  <input type="range" id="sfxVolumeSlider" min="0" max="100" value="100" class="volume-slider">
+                </div>
+              </div>
+              <div class="row" style="margin-top:20px">
+                <button class="btn btn-large" id="settingsBackBtn">Back</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -110,6 +132,7 @@
         <button class="btn btn-large" id="pauseToLevelSelectBtn">Level Select</button>
       </div>
     </div>
+
 
     <!-- New Game Warning -->
     <div id="newGameWarningContainer" class="hidden">

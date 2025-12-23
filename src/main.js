@@ -1,6 +1,6 @@
 import { rand } from './utils/math.js';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './config.js';
-import { ensureAudio } from './systems/AudioSystem.js';
+import { ensureAudio, startBackgroundMusic, stopBackgroundMusic, setMusicVolume, setSFXVolume, getMusicVolume, getSFXVolume } from './systems/AudioSystem.js';
 import { Game } from './game/Game.js';
 import { render } from './render/GameRenderer.js';
 import { drawHUD, drawScoreOverlay } from './ui/HUD.js';
@@ -22,6 +22,7 @@ const mainMenuSection = document.getElementById('mainMenuSection');
 const mainMenuCard = document.getElementById('mainMenuCard');
 const mainMenuButtons = document.getElementById('mainMenuButtons');
 const levelSelectContent = document.getElementById('levelSelectContent');
+const settingsContent = document.getElementById('settingsContent');
 const levelSelect = document.getElementById('levelSelect');
 const levelList = document.getElementById('levelList');
 const levelComplete = document.getElementById('levelComplete');
@@ -43,6 +44,11 @@ const levelCompleteText = document.getElementById('levelCompleteText');
 const newGameWarning = document.getElementById('newGameWarning');
 const confirmNewGameBtn = document.getElementById('confirmNewGameBtn');
 const cancelNewGameBtn = document.getElementById('cancelNewGameBtn');
+const settingsBackBtn = document.getElementById('settingsBackBtn');
+const musicVolumeSlider = document.getElementById('musicVolumeSlider');
+const sfxVolumeSlider = document.getElementById('sfxVolumeSlider');
+const musicVolumeValue = document.getElementById('musicVolumeValue');
+const sfxVolumeValue = document.getElementById('sfxVolumeValue');
 
 // Input
 const keys = new Set();
@@ -198,6 +204,10 @@ function showScreen(screenName) {
     if (levelSelectContent) {
       levelSelectContent.style.display = 'none';
     }
+    // Settings-Content verstecken
+    if (settingsContent) {
+      settingsContent.style.display = 'none';
+    }
     if (mainMenuButtons) {
       mainMenuButtons.style.display = 'flex';
       mainMenuButtons.style.flexDirection = 'column';
@@ -207,6 +217,9 @@ function showScreen(screenName) {
     titleStarfieldVisible = true;
     titleStarfieldCanvas.style.opacity = '1';
     titleStarfieldCanvas.style.transition = 'opacity 0.6s ease-in';
+    // Hintergrundmusik starten
+    ensureAudio();
+    startBackgroundMusic();
   }
   else if (screenName === 'levelSelect') {
     // titleScreen bleibt sichtbar (gleiche Karte)
@@ -232,6 +245,26 @@ function showScreen(screenName) {
   else if (screenName === 'gameComplete') gameComplete.classList.remove('hidden');
   else if (screenName === 'pause') {
     pauseMenu.classList.remove('hidden');
+  }
+  else if (screenName === 'settings') {
+    // titleScreen bleibt sichtbar (gleiche Karte)
+    titleScreen.classList.remove('hidden');
+    // startJourneySection verstecken
+    startJourneySection.classList.add('hidden');
+    // Hauptmenü-Section muss sichtbar bleiben, da die Karte dort ist
+    mainMenuSection.classList.remove('hidden');
+    // Hauptmenü-Buttons ausblenden
+    if (mainMenuButtons) {
+      mainMenuButtons.style.display = 'none';
+    }
+    // Levelauswahl-Content verstecken, falls sichtbar
+    if (levelSelectContent) {
+      levelSelectContent.style.display = 'none';
+    }
+    // Settings-Content einblenden
+    if (settingsContent) {
+      settingsContent.style.display = 'block';
+    }
   }
   else if (screenName === 'newGameWarning') {
     // Titelbildschirm sichtbar lassen, damit das Menü im Hintergrund bleibt
@@ -278,6 +311,8 @@ function loadFromLocalStorage() {
 
 function startLevel(level) {
   ensureAudio();
+  // Hintergrundmusik stoppen, wenn das Spiel startet
+  stopBackgroundMusic();
   game.setLevel(level);
   game.resetAll();
   game.state = 'play';
@@ -319,10 +354,6 @@ window.addEventListener('keydown', (e) => {
         showPauseMenu();
       }
     }
-  }
-  if (e.code === 'KeyM') {
-    hardMode = !hardMode;
-    game.hardMode = hardMode;
   }
 }, {passive:false});
 
@@ -502,11 +533,122 @@ continueBtn.addEventListener('click', () => {
   transitionToLevelSelect();
 });
 
-// Settings Button (Placeholder)
+// Settings laden und anwenden
+function loadSettings() {
+  const savedMusicVolume = localStorage.getItem('musicVolume');
+  const savedSFXVolume = localStorage.getItem('sfxVolume');
+  
+  if (savedMusicVolume !== null) {
+    const volume = parseFloat(savedMusicVolume);
+    setMusicVolume(volume);
+    if (musicVolumeSlider) {
+      musicVolumeSlider.value = volume * 100;
+    }
+    if (musicVolumeValue) {
+      musicVolumeValue.textContent = Math.round(volume * 100) + '%';
+    }
+  }
+  
+  if (savedSFXVolume !== null) {
+    const volume = parseFloat(savedSFXVolume);
+    setSFXVolume(volume);
+    if (sfxVolumeSlider) {
+      sfxVolumeSlider.value = volume * 100;
+    }
+    if (sfxVolumeValue) {
+      sfxVolumeValue.textContent = Math.round(volume * 100) + '%';
+    }
+  }
+}
+
+// Settings Button
 settingsBtn.addEventListener('click', () => {
-  // TODO: Settings implementieren
-  alert('Settings kommen bald!');
+  ensureAudio();
+  showScreen('settings');
 });
+
+// Settings Back Button
+settingsBackBtn.addEventListener('click', () => {
+  ensureAudio();
+  
+  // Settings-Content ausblenden
+  if (settingsContent) {
+    settingsContent.style.display = 'none';
+  }
+  
+  // Levelauswahl-Content verstecken, falls sichtbar
+  if (levelSelectContent) {
+    levelSelectContent.style.display = 'none';
+  }
+  
+  // Karte verkleinern mit Animation (zurück zur Hauptmenü-Größe)
+  if (mainMenuCard) {
+    // Entferne expand-Animation
+    mainMenuCard.classList.remove('card-expanding');
+    // Sanft zurücksetzen zur Hauptmenü-Größe
+    requestAnimationFrame(() => {
+      mainMenuCard.style.width = 'min(500px, 92vw)';
+      setTimeout(() => {
+        mainMenuCard.style.width = '';
+      }, 600);
+    });
+  }
+  
+  // Hauptmenü-Buttons wieder einblenden
+  if (mainMenuButtons) {
+    mainMenuButtons.style.display = 'flex';
+    mainMenuButtons.style.flexDirection = 'column';
+    mainMenuButtons.style.gap = '16px';
+    
+    // Hauptmenü-Buttons einblenden mit Animation
+    const menuButtons = [newGameBtn, continueBtn, settingsBtn, backToTitleFromMainBtn];
+    menuButtons.forEach((btn, index) => {
+      btn.style.opacity = '0';
+      btn.style.transform = 'scale(0.9) translateY(10px)';
+      
+      setTimeout(() => {
+        btn.classList.add('level-button-enter');
+        if (index === 1) btn.classList.add('level-button-enter-delay-1');
+        if (index === 2) btn.classList.add('level-button-enter-delay-2');
+        if (index === 3) btn.classList.add('level-button-enter-delay-2');
+        
+        setTimeout(() => {
+          btn.classList.remove('level-button-enter', 'level-button-enter-delay-1', 'level-button-enter-delay-2');
+          btn.style.opacity = '';
+          btn.style.transform = '';
+        }, 500);
+      }, 50 + (index * 100));
+    });
+  }
+  
+  // titleScreen und mainMenuSection bleiben sichtbar
+});
+
+// Music Volume Slider
+if (musicVolumeSlider) {
+  musicVolumeSlider.addEventListener('input', (e) => {
+    const volume = parseFloat(e.target.value) / 100;
+    setMusicVolume(volume);
+    if (musicVolumeValue) {
+      musicVolumeValue.textContent = Math.round(volume * 100) + '%';
+    }
+    // Im localStorage speichern
+    localStorage.setItem('musicVolume', volume.toString());
+  });
+}
+
+// SFX Volume Slider
+if (sfxVolumeSlider) {
+  sfxVolumeSlider.addEventListener('input', (e) => {
+    const volume = parseFloat(e.target.value) / 100;
+    setSFXVolume(volume);
+    if (sfxVolumeValue) {
+      sfxVolumeValue.textContent = Math.round(volume * 100) + '%';
+    }
+    // Im localStorage speichern
+    localStorage.setItem('sfxVolume', volume.toString());
+  });
+}
 
 // Back to Title Button (vom Hauptmenü)
 backToTitleFromMainBtn.addEventListener('click', () => {
@@ -544,6 +686,11 @@ backToTitleFromMainBtn.addEventListener('click', () => {
     titleStarfieldVisible = true;
     titleStarfieldCanvas.style.opacity = '1';
     titleStarfieldCanvas.style.transition = 'opacity 0.6s ease-in';
+    // Start Journey Section wieder einblenden
+    startJourneySection.classList.remove('hidden');
+    // Musik wieder starten, wenn zurück zum Titelbildschirm
+    ensureAudio();
+    startBackgroundMusic();
   }, 600);
 });
 
@@ -607,6 +754,7 @@ backToTitleBtn.addEventListener('click', () => {
     // Back-Button Animation entfernen
     backToTitleBtn.classList.remove('start-journey-exit');
     // titleScreen und mainMenuSection bleiben sichtbar (kein showScreen('title') nötig)
+    // Musik bleibt gestoppt im Hauptmenü
   }, 600);
 });
 
@@ -637,6 +785,8 @@ pauseToLevelSelectBtn.addEventListener('click', () => {
   game.paused = false;
   overlay.classList.add('hidden');
   pauseMenu.classList.add('hidden');
+  // Musik stoppen, wenn zur Level-Auswahl navigiert wird
+  stopBackgroundMusic();
   // Zur Levelauswahl navigieren
   transitionToLevelSelect();
 });
@@ -716,6 +866,11 @@ const fixedDT = 1.0 / targetFPS;
 // Initial state
 game.state = 'title';
 showScreen('title');
+// Settings laden
+loadSettings();
+// Hintergrundmusik starten (nach showScreen, damit alles initialisiert ist)
+ensureAudio();
+startBackgroundMusic();
 
 // Enter key handling for title screen (separate listener to avoid conflicts)
 document.addEventListener('keydown', (e) => {
