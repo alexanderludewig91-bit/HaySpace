@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 const basePath = process.env.GITHUB_REPOSITORY_NAME || '';
 const distDir = 'dist';
 const indexPath = join(distDir, 'index.html');
+const assetsDir = join(distDir, 'assets');
 
 console.log('=== Fix Base Path Script ===');
 console.log('GITHUB_REPOSITORY_NAME:', basePath || '(not set)');
