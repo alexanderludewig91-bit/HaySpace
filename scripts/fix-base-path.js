@@ -48,6 +48,28 @@ if (html === beforeReplace) {
 // HTML-Datei schreiben
 writeFileSync(indexPath, html, 'utf-8');
 
+// JavaScript- und CSS-Dateien auch korrigieren
+if (existsSync(assetsDir)) {
+  const assetFiles = readdirSync(assetsDir);
+  
+  for (const file of assetFiles) {
+    const filePath = join(assetsDir, file);
+    let content = readFileSync(filePath, 'utf-8');
+    const originalContent = content;
+    
+    // Musik-Dateien: /backround-music/ -> /HaySpace/backround-music/
+    content = content.replace(/\/backround-music\//g, `${base}backround-music/`);
+    
+    // Cover-Bild: /hayspace-cover.png -> /HaySpace/hayspace-cover.png
+    content = content.replace(/\/hayspace-cover\.png/g, `${base}hayspace-cover.png`);
+    
+    if (content !== originalContent) {
+      writeFileSync(filePath, content, 'utf-8');
+      console.log(`✓ Fixed paths in ${file}`);
+    }
+  }
+}
+
 const fixedScript = html.match(/<script[^>]*src="[^"]*"/)?.[0];
 // Nur Asset-CSS prüfen, nicht externe Links
 const fixedAssetCss = html.match(/<link[^>]*href="[^"]*assets[^"]*"[^>]*stylesheet/)?.[0];
