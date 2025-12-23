@@ -1,5 +1,7 @@
 let audioCtx = null;
 let introMusic = null;
+let levelMusic = null;
+let currentLevelMusic = null; // Aktuell laufende Level-Musik
 
 // Lautstärke-Einstellungen (0-1, werden von Settings überschrieben)
 let musicVolume = 0.5; // 50% Standard
@@ -67,18 +69,30 @@ export function startBackgroundMusic() {
   if (music) {
     music.volume = musicVolume;
     
-    // Musik abspielen, wenn sie pausiert ist
-    if (music.paused) {
-      const playPromise = music.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          // Fehler ignorieren, wenn es ein Autoplay-Policy-Fehler ist
-          // Die Musik wird dann beim ersten Benutzerinteraktion gestartet
-          if (err.name !== 'NotAllowedError') {
-            console.error('Fehler beim Abspielen der Intro-Musik:', err);
-          }
-        });
+    // Funktion zum Abspielen der Musik
+    const tryPlay = () => {
+      if (music.paused) {
+        const playPromise = music.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            // Fehler ignorieren, wenn es ein Autoplay-Policy-Fehler ist
+            // Die Musik wird dann beim ersten Benutzerinteraktion gestartet
+            if (err.name !== 'NotAllowedError') {
+              console.error('Fehler beim Abspielen der Intro-Musik:', err);
+            }
+          });
+        }
       }
+    };
+    
+    // Wenn die Musik bereits genug Daten hat, sofort abspielen
+    if (music.readyState >= 2) { // HAVE_CURRENT_DATA oder höher
+      tryPlay();
+    } else {
+      // Warten, bis die Musik geladen ist
+      music.addEventListener('canplay', tryPlay, { once: true });
+      // Auch versuchen, sofort abzuspielen (für den Fall, dass es bereits geladen ist)
+      tryPlay();
     }
   }
 }
@@ -90,11 +104,78 @@ export function stopBackgroundMusic() {
   }
 }
 
+// Level-Musik initialisieren
+function initLevelMusic(level) {
+  // Wenn bereits die richtige Level-Musik läuft, nichts tun
+  if (currentLevelMusic && currentLevelMusic.src.endsWith(`Level${level}.mp3`)) {
+    return currentLevelMusic;
+  }
+  
+  // Alte Level-Musik stoppen, falls vorhanden
+  if (levelMusic && !levelMusic.paused) {
+    levelMusic.pause();
+    levelMusic.currentTime = 0;
+  }
+  
+  // Neue Level-Musik erstellen
+  levelMusic = new Audio(`/backround-music/Level${level}.mp3`);
+  levelMusic.loop = true;
+  levelMusic.volume = musicVolume;
+  levelMusic.preload = 'auto';
+  
+  // Fehlerbehandlung
+  levelMusic.addEventListener('error', (e) => {
+    console.error(`Fehler beim Laden der Level ${level} Musik:`, e);
+  });
+  
+  currentLevelMusic = levelMusic;
+  return levelMusic;
+}
+
+// Level-Musik starten
+export function startLevelMusic(level) {
+  ensureAudio();
+  
+  // Intro-Musik stoppen
+  stopBackgroundMusic();
+  
+  // Level-Musik initialisieren und starten
+  const music = initLevelMusic(level);
+  
+  if (music) {
+    music.volume = musicVolume;
+    
+    // Musik abspielen, wenn sie pausiert ist
+    if (music.paused) {
+      const playPromise = music.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          if (err.name !== 'NotAllowedError') {
+            console.error(`Fehler beim Abspielen der Level ${level} Musik:`, err);
+          }
+        });
+      }
+    }
+  }
+}
+
+// Level-Musik stoppen
+export function stopLevelMusic() {
+  if (levelMusic && !levelMusic.paused) {
+    levelMusic.pause();
+    levelMusic.currentTime = 0; // Zurück zum Anfang
+  }
+  currentLevelMusic = null;
+}
+
 // Lautstärke-Einstellungen setzen
 export function setMusicVolume(volume) {
   musicVolume = Math.max(0, Math.min(1, volume)); // Clamp zwischen 0 und 1
   if (introMusic) {
     introMusic.volume = musicVolume;
+  }
+  if (levelMusic) {
+    levelMusic.volume = musicVolume;
   }
 }
 

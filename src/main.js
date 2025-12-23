@@ -1,6 +1,6 @@
 import { rand } from './utils/math.js';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './config.js';
-import { ensureAudio, startBackgroundMusic, stopBackgroundMusic, setMusicVolume, setSFXVolume, getMusicVolume, getSFXVolume } from './systems/AudioSystem.js';
+import { ensureAudio, startBackgroundMusic, stopBackgroundMusic, startLevelMusic, stopLevelMusic, setMusicVolume, setSFXVolume, getMusicVolume, getSFXVolume } from './systems/AudioSystem.js';
 import { Game } from './game/Game.js';
 import { render } from './render/GameRenderer.js';
 import { drawHUD, drawScoreOverlay } from './ui/HUD.js';
@@ -217,7 +217,8 @@ function showScreen(screenName) {
     titleStarfieldVisible = true;
     titleStarfieldCanvas.style.opacity = '1';
     titleStarfieldCanvas.style.transition = 'opacity 0.6s ease-in';
-    // Hintergrundmusik starten
+    // Level-Musik stoppen und Titelmusik starten
+    stopLevelMusic();
     ensureAudio();
     startBackgroundMusic();
   }
@@ -311,8 +312,8 @@ function loadFromLocalStorage() {
 
 function startLevel(level) {
   ensureAudio();
-  // Hintergrundmusik stoppen, wenn das Spiel startet
-  stopBackgroundMusic();
+  // Level-Musik starten
+  startLevelMusic(level);
   game.setLevel(level);
   game.resetAll();
   game.state = 'play';
@@ -688,7 +689,8 @@ backToTitleFromMainBtn.addEventListener('click', () => {
     titleStarfieldCanvas.style.transition = 'opacity 0.6s ease-in';
     // Start Journey Section wieder einblenden
     startJourneySection.classList.remove('hidden');
-    // Musik wieder starten, wenn zurück zum Titelbildschirm
+    // Level-Musik stoppen und Titelmusik starten
+    stopLevelMusic();
     ensureAudio();
     startBackgroundMusic();
   }, 600);
@@ -785,8 +787,7 @@ pauseToLevelSelectBtn.addEventListener('click', () => {
   game.paused = false;
   overlay.classList.add('hidden');
   pauseMenu.classList.add('hidden');
-  // Musik stoppen, wenn zur Level-Auswahl navigiert wird
-  stopBackgroundMusic();
+  // Level-Musik läuft weiter, wenn zur Level-Auswahl navigiert wird
   // Zur Levelauswahl navigieren
   transitionToLevelSelect();
 });
@@ -871,6 +872,23 @@ loadSettings();
 // Hintergrundmusik starten (nach showScreen, damit alles initialisiert ist)
 ensureAudio();
 startBackgroundMusic();
+
+// Autoplay-Policy Workaround: Musik beim ersten Benutzerinteraktion starten
+let musicStartedByUser = false;
+function startMusicOnFirstInteraction() {
+  if (!musicStartedByUser) {
+    musicStartedByUser = true;
+    ensureAudio();
+    startBackgroundMusic();
+    // Event-Listener entfernen, da wir sie nur einmal brauchen
+    document.removeEventListener('click', startMusicOnFirstInteraction);
+    document.removeEventListener('keydown', startMusicOnFirstInteraction);
+  }
+}
+
+// Event-Listener für erste Benutzerinteraktion hinzufügen
+document.addEventListener('click', startMusicOnFirstInteraction, { once: true });
+document.addEventListener('keydown', startMusicOnFirstInteraction, { once: true });
 
 // Enter key handling for title screen (separate listener to avoid conflicts)
 document.addEventListener('keydown', (e) => {
