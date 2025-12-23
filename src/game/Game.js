@@ -219,11 +219,29 @@ export class Game {
     // Boss-Meldung anzeigen (2.5 Sekunden, damit sie verschwindet bevor Boss sichtbar wird)
     this.waveMessage = 2.5;
     
+    // Boss-Stats skalieren mit Level
+    let baseHP = this.hardMode ? 520 : 420;
+    let hpMultiplier = 1.0;
+    let shootCDBase = 0.6;
+    
+    if (this.currentLevel === 2) {
+      // Level 2: 25% mehr HP, etwas aggressiver
+      hpMultiplier = 1.25;
+      shootCDBase = 0.55;
+    } else if (this.currentLevel === 3) {
+      // Level 3: 50% mehr HP, deutlich aggressiver
+      hpMultiplier = 1.5;
+      shootCDBase = 0.5;
+    }
+    
+    const hpMax = Math.round(baseHP * hpMultiplier);
+    
     this.boss = {
       x: W*0.5, y: -160, vx: 0, vy: 85, r: 58,
-      hpMax: this.hardMode ? 520 : 420,
-      hp: this.hardMode ? 520 : 420,
-      t: 0, shootCD: 0.6, rage: 0, phase: 0
+      hpMax: hpMax,
+      hp: hpMax,
+      t: 0, shootCD: shootCDBase, rage: 0, phase: 0,
+      level: this.currentLevel // Level speichern für Schussmuster
     };
   }
 
@@ -333,7 +351,15 @@ export class Game {
     const t = this.boss.t;
     const hpRatio = this.boss.hp / this.boss.hpMax;
 
-    const petals = this.hardMode ? 12 : 10;
+    // Petals skalieren mit Level (mehr Petals = schwieriger)
+    let basePetals = this.hardMode ? 12 : 10;
+    if (this.boss.level === 2) {
+      basePetals = this.hardMode ? 13 : 11;
+    } else if (this.boss.level === 3) {
+      basePetals = this.hardMode ? 14 : 12;
+    }
+    const petals = basePetals;
+    
     const baseSpeed = lerp(165, 250, 1-hpRatio);
     const rot = t*1.15;
 
@@ -605,11 +631,16 @@ export class Game {
       // Keine neuen Wellen spawnten, wenn Boss bereits besiegt wurde
       if (!this.bossDefeated && this.enemies.length === 0){
         this.wave += 1;
-        if (this.wave >= 5){
-          // Welle 5 = Boss
+        // Boss-Welle ist abhängig vom Level:
+        // Level 1: Welle 6 (5 normale Wellen + Boss)
+        // Level 2: Welle 7 (6 normale Wellen + Boss)
+        // Level 3: Welle 8 (7 normale Wellen + Boss)
+        const bossWave = 5 + this.currentLevel;
+        if (this.wave >= bossWave){
+          // Boss-Welle
           this.spawnBoss();
         } else {
-          // Wellen 1-4 = Normale Gegner
+          // Normale Gegner-Wellen
           this.spawnWave(this.wave);
         }
       }
@@ -624,7 +655,17 @@ export class Game {
 
         this.boss.shootCD -= dt;
         const hpRatio = this.boss.hp / this.boss.hpMax;
-        const rate = lerp(0.85, this.hardMode?0.40:0.50, 1-hpRatio);
+        // Schussrate wird aggressiver in höheren Leveln
+        let minRate = this.hardMode ? 0.40 : 0.50;
+        let maxRate = 0.85;
+        if (this.boss.level === 2) {
+          minRate = this.hardMode ? 0.35 : 0.45;
+          maxRate = 0.80;
+        } else if (this.boss.level === 3) {
+          minRate = this.hardMode ? 0.30 : 0.40;
+          maxRate = 0.75;
+        }
+        const rate = lerp(maxRate, minRate, 1-hpRatio);
         if (this.boss.shootCD <= 0){
           this.bossShootPattern();
           this.boss.shootCD = rate;

@@ -126,41 +126,176 @@ export function drawEnemy(ctx, e, hardMode){
 
 export function drawBoss(ctx, b){
   ctx.save();
+  
+  const level = b.level || 1;
+  
+  if (level === 1) {
+    // Level 1 Boss: Rechteckiges Design (Original)
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.55, 'rgba(255,59,107,0.45)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.15, 'rgba(255,59,107,0.45)', 1);
 
-  drawGlowCircle(ctx, b.x, b.y, b.r*1.55, 'rgba(255,59,107,0.45)', 1);
-  drawGlowCircle(ctx, b.x, b.y, b.r*1.15, 'rgba(255,59,107,0.45)', 1);
+    ctx.translate(b.x, b.y);
 
-  ctx.translate(b.x, b.y);
+    const shell = ctx.createLinearGradient(0,-b.r, 0, b.r);
+    shell.addColorStop(0,'rgba(245,250,255,0.85)');
+    shell.addColorStop(1,'rgba(255,59,107,0.90)');
 
-  const shell = ctx.createLinearGradient(0,-b.r, 0, b.r);
-  shell.addColorStop(0,'rgba(245,250,255,0.85)');
-  shell.addColorStop(1,'rgba(255,59,107,0.90)');
+    ctx.shadowColor = 'rgba(255,59,107,0.55)';
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    ctx.roundRect(-b.r*1.05, -b.r*0.70, b.r*2.10, b.r*1.40, 38);
+    ctx.fill();
 
-  ctx.shadowColor = 'rgba(255,59,107,0.55)';
-  ctx.shadowBlur = 28;
-  ctx.fillStyle = shell;
-  ctx.beginPath();
-  ctx.roundRect(-b.r*1.05, -b.r*0.70, b.r*2.10, b.r*1.40, 38);
-  ctx.fill();
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = 'rgba(245,250,255,0.45)';
+    ctx.beginPath();
+    ctx.roundRect(-b.r*1.40, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
+    ctx.roundRect(b.r*0.88, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
+    ctx.fill();
 
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = 'rgba(245,250,255,0.45)';
-  ctx.beginPath();
-  ctx.roundRect(-b.r*1.40, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
-  ctx.roundRect(b.r*0.88, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
-  ctx.fill();
+    ctx.shadowBlur = 0;
+    drawGlowCircle(ctx, 0, 0, 22, 'rgba(255,209,102,0.90)', 1);
+    drawGlowCircle(ctx, 0, 0, 10, 'rgba(0,0,0,0.25)', 1);
 
-  ctx.shadowBlur = 0;
-  drawGlowCircle(ctx, 0, 0, 22, 'rgba(255,209,102,0.90)', 1);
-  drawGlowCircle(ctx, 0, 0, 10, 'rgba(0,0,0,0.25)', 1);
+    const hpRatio = b.hp/b.hpMax;
+    const pulse = 0.4 + 0.6*Math.sin(b.t*6);
+    ctx.strokeStyle = `rgba(108,255,154,${0.18 + (1-hpRatio)*0.18 + pulse*0.08})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.72, 0, Math.PI*2);
+    ctx.stroke();
+  } else if (level === 2) {
+    // Level 2 Boss: Hexagonales/Sechseckiges Design mit mehr Details
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.6, 'rgba(200,50,255,0.45)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.2, 'rgba(150,100,255,0.45)', 1);
 
-  const hpRatio = b.hp/b.hpMax;
-  const pulse = 0.4 + 0.6*Math.sin(b.t*6);
-  ctx.strokeStyle = `rgba(108,255,154,${0.18 + (1-hpRatio)*0.18 + pulse*0.08})`;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(0, 0, b.r*0.72, 0, Math.PI*2);
-  ctx.stroke();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.t * 0.3); // Langsame Rotation
+
+    // Hauptkörper: Hexagon
+    const shell = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r);
+    shell.addColorStop(0,'rgba(245,250,255,0.90)');
+    shell.addColorStop(0.5,'rgba(200,50,255,0.85)');
+    shell.addColorStop(1,'rgba(100,0,200,0.90)');
+
+    ctx.shadowColor = 'rgba(200,50,255,0.60)';
+    ctx.shadowBlur = 32;
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    // Hexagon zeichnen
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 2;
+      const x = Math.cos(angle) * b.r;
+      const y = Math.sin(angle) * b.r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Zusätzliche Details: Eckpunkte
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = 'rgba(255,209,102,0.75)';
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 2;
+      const x = Math.cos(angle) * b.r * 1.1;
+      const y = Math.sin(angle) * b.r * 1.1;
+      drawGlowCircle(ctx, x, y, 8, 'rgba(255,209,102,0.90)', 1);
+    }
+
+    // Zentrum
+    ctx.shadowBlur = 0;
+    drawGlowCircle(ctx, 0, 0, 24, 'rgba(200,50,255,0.90)', 1);
+    drawGlowCircle(ctx, 0, 0, 12, 'rgba(0,0,0,0.30)', 1);
+
+    // HP-Ring
+    const hpRatio = b.hp/b.hpMax;
+    const pulse = 0.4 + 0.6*Math.sin(b.t*8);
+    ctx.strokeStyle = `rgba(108,255,154,${0.20 + (1-hpRatio)*0.20 + pulse*0.10})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.75, 0, Math.PI*2);
+    ctx.stroke();
+  } else if (level === 3) {
+    // Level 3 Boss: Komplexes Design mit mehreren Segmenten und Spikes
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.7, 'rgba(255,100,0,0.50)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.3, 'rgba(255,150,0,0.45)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*0.9, 'rgba(255,200,0,0.40)', 1);
+
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.t * 0.5); // Schnellere Rotation
+
+    // Hauptkörper: Achteck (Oktagon)
+    const shell = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r);
+    shell.addColorStop(0,'rgba(255,250,245,0.95)');
+    shell.addColorStop(0.3,'rgba(255,200,100,0.90)');
+    shell.addColorStop(0.6,'rgba(255,150,0,0.85)');
+    shell.addColorStop(1,'rgba(255,50,0,0.90)');
+
+    ctx.shadowColor = 'rgba(255,100,0,0.65)';
+    ctx.shadowBlur = 36;
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    // Oktagon zeichnen
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI / 4) * i - Math.PI / 2;
+      const x = Math.cos(angle) * b.r;
+      const y = Math.sin(angle) * b.r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Spikes an den Ecken
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = 'rgba(255,200,0,0.85)';
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI / 4) * i - Math.PI / 2;
+      const x = Math.cos(angle) * b.r * 1.25;
+      const y = Math.sin(angle) * b.r * 1.25;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      const spikeX = Math.cos(angle) * b.r * 1.45;
+      const spikeY = Math.sin(angle) * b.r * 1.45;
+      ctx.lineTo(spikeX, spikeY);
+      const spikeAngle1 = angle + Math.PI / 8;
+      const spikeAngle2 = angle - Math.PI / 8;
+      ctx.lineTo(Math.cos(spikeAngle1) * b.r * 1.15, Math.sin(spikeAngle1) * b.r * 1.15);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Innere Details: Rotierende Ringe
+    ctx.shadowBlur = 16;
+    ctx.strokeStyle = 'rgba(255,209,102,0.70)';
+    ctx.lineWidth = 3;
+    ctx.save();
+    ctx.rotate(-b.t * 0.8);
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.6, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Zentrum
+    ctx.shadowBlur = 0;
+    drawGlowCircle(ctx, 0, 0, 28, 'rgba(255,100,0,0.95)', 1);
+    drawGlowCircle(ctx, 0, 0, 14, 'rgba(0,0,0,0.35)', 1);
+    
+    // Pulsierendes Zentrum
+    const centerPulse = 0.5 + 0.5*Math.sin(b.t*10);
+    drawGlowCircle(ctx, 0, 0, 8 + centerPulse * 4, 'rgba(255,255,255,0.90)', 1);
+
+    // HP-Ring
+    const hpRatio = b.hp/b.hpMax;
+    const pulse = 0.4 + 0.6*Math.sin(b.t*10);
+    ctx.strokeStyle = `rgba(108,255,154,${0.25 + (1-hpRatio)*0.25 + pulse*0.12})`;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.8, 0, Math.PI*2);
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
@@ -357,7 +492,9 @@ function drawWaveMessage(ctx, game) {
   ctx.shadowBlur = 24;
   
   // Gradient für den Text (Boss = rot/orange, normale Welle = blau/grün/gelb)
-  const isBossWave = game.wave >= 5;
+  // Boss-Welle ist abhängig vom Level: 5 + currentLevel
+  const bossWave = 5 + game.currentLevel;
+  const isBossWave = game.wave >= bossWave;
   const gradient = ctx.createLinearGradient(W/2, H/2 - 40, W/2, H/2 + 40);
   if (isBossWave) {
     // Boss-Welle: Rot-Orange Gradient
