@@ -475,7 +475,7 @@ export class Game {
     return false;
   }
 
-  update(dt, keys){
+  update(dt, keys, gamepadInput = null){
     if (this.hitstop > 0){
       this.hitstop -= dt;
       return;
@@ -497,11 +497,23 @@ export class Game {
     const maxV  = baseMaxV * this.player.speedBoost;
     const fric  = 0.88;
 
+    // Bewegung: Keyboard oder Gamepad
     let ax = 0, ay = 0;
+    
+    // Keyboard-Input
     if (keys.has('ArrowLeft') || keys.has('KeyA')) ax -= 1;
     if (keys.has('ArrowRight') || keys.has('KeyD')) ax += 1;
     if (keys.has('ArrowUp') || keys.has('KeyW')) ay -= 1;
     if (keys.has('ArrowDown') || keys.has('KeyS')) ay += 1;
+    
+    // Gamepad-Input (überschreibt Keyboard, wenn vorhanden)
+    if (gamepadInput) {
+      const movement = gamepadInput.getMovement();
+      if (Math.abs(movement.x) > 0 || Math.abs(movement.y) > 0) {
+        ax = movement.x;
+        ay = movement.y;
+      }
+    }
 
     const mag = Math.hypot(ax,ay);
     if (mag > 0){ ax/=mag; ay/=mag; }
@@ -515,8 +527,11 @@ export class Game {
       this.player.vy = (this.player.vy/spd)*maxV;
     }
 
+    // Dash: Keyboard oder Gamepad
     if (this.player.dashCD > 0) this.player.dashCD -= dt;
-    if ((keys.has('ShiftLeft') || keys.has('ShiftRight')) && this.player.dashCD <= 0){
+    const dashPressed = (keys.has('ShiftLeft') || keys.has('ShiftRight')) || 
+                        (gamepadInput && gamepadInput.isDashing());
+    if (dashPressed && this.player.dashCD <= 0){
       this.player.dashCD = this.hardMode ? 0.55 : 0.45;
       this.player.inv = Math.max(this.player.inv, 0.40);
       const dx = (ax!==0||ay!==0) ? ax : 0;
@@ -540,7 +555,9 @@ export class Game {
 
     if (this.player.inv > 0) this.player.inv -= dt;
 
-    if (keys.has('Space')) this.shoot();
+    // Schießen: Keyboard oder Gamepad
+    const shootPressed = keys.has('Space') || (gamepadInput && gamepadInput.isShooting());
+    if (shootPressed) this.shoot();
 
     for (let i=this.bullets.length-1;i>=0;i--){
       const b = this.bullets[i];

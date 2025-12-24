@@ -6,6 +6,8 @@ import { render } from './render/GameRenderer.js';
 import { drawHUD, drawScoreOverlay } from './ui/HUD.js';
 import { Starfield } from './background/Starfield.js';
 import { initDevMode } from './ui/DevMode.js';
+import { GamepadSystem } from './systems/GamepadSystem.js';
+import { initGamepadMenuNavigation } from './ui/GamepadMenuNavigation.js';
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -55,6 +57,43 @@ const keys = new Set();
 let hardMode = false;
 let levelCompleteDelayStarted = false;
 let levelCompleteTime = 0;
+let gamepadNavigationCheckTime = 0;
+
+// Gamepad System
+const gamepad = new GamepadSystem();
+
+// Gamepad Menu Navigation initialisieren
+const menuNavigationElements = {
+  titleScreen,
+  startJourneySection,
+  mainMenuSection,
+  levelSelectContent,
+  settingsContent,
+  levelList,
+  levelComplete,
+  gameComplete,
+  pauseMenu,
+  startJourneyBtn,
+  newGameBtn,
+  continueBtn,
+  settingsBtn,
+  backToTitleFromMainBtn,
+  resumeBtn,
+  pauseToLevelSelectBtn,
+  backToTitleBtn,
+  nextLevelBtn,
+  backToLevelSelectBtn,
+  backToLevelSelectFromCompleteBtn,
+  confirmNewGameBtn,
+  cancelNewGameBtn,
+  settingsBackBtn
+};
+
+const { setupGamepadNavigation, handleGamepadBack } = initGamepadMenuNavigation(
+  menuNavigationElements,
+  gamepad,
+  ensureAudio
+);
 
 // Game instance
 const game = new Game();
@@ -180,6 +219,7 @@ function renderLevelSelect() {
   });
 }
 
+
 function showScreen(screenName) {
   // titleScreen wird nicht versteckt, wenn levelSelect angezeigt wird (gleiche Karte)
   if (screenName !== 'levelSelect' && screenName !== 'title') {
@@ -242,9 +282,19 @@ function showScreen(screenName) {
       levelSelectContent.style.display = 'block';
       // Sanfte Animation für Levelauswahl-Buttons
       renderLevelSelect();
+      // Gamepad-Navigation nach dem Rendern aktivieren
+      setTimeout(() => {
+        setupGamepadNavigation('levelSelect');
+      }, 600); // Nach Animation
     }
   }
-  else if (screenName === 'levelComplete') levelComplete.classList.remove('hidden');
+  else if (screenName === 'levelComplete') {
+    levelComplete.classList.remove('hidden');
+    // Hauptmenü verstecken, wenn Level Complete angezeigt wird
+    if (mainMenuSection) {
+      mainMenuSection.classList.add('hidden');
+    }
+  }
   else if (screenName === 'gameComplete') gameComplete.classList.remove('hidden');
   else if (screenName === 'pause') {
     pauseMenu.classList.remove('hidden');
@@ -285,6 +335,11 @@ function showScreen(screenName) {
   if (screenName !== 'pause') {
     overlay.classList.remove('hidden');
   }
+  
+  // Gamepad-Navigation für den Screen aktivieren
+  setTimeout(() => {
+    setupGamepadNavigation(screenName);
+  }, 100); // Kurze Verzögerung, damit DOM aktualisiert ist
 }
 
 function showPauseMenu() {
@@ -292,6 +347,9 @@ function showPauseMenu() {
     game.paused = true;
     showScreen('pause');
     overlay.classList.remove('hidden');
+    setTimeout(() => {
+      setupGamepadNavigation('pause');
+    }, 100);
   }
 }
 
@@ -322,6 +380,8 @@ function startLevel(level) {
   game.paused = false;
   game.hardMode = hardMode;
   overlay.classList.add('hidden');
+  // Gamepad-Navigation deaktivieren (Spiel läuft)
+  gamepad.disableMenuNavigation();
   // Alle Screens verstecken, damit Canvas wieder sichtbar wird
   titleScreen.classList.add('hidden');
   levelSelect.classList.add('hidden');
@@ -427,6 +487,11 @@ startJourneyBtn.addEventListener('click', () => {
         }, 500);
       }, 200 + (index * 100)); // 200ms, 300ms, 400ms, 500ms Delay
     });
+    
+    // Gamepad-Navigation für Hauptmenü aktivieren (nach Animation)
+    setTimeout(() => {
+      setupGamepadNavigation('title');
+    }, 1000);
   }, 600);
 });
 
@@ -527,6 +592,11 @@ cancelNewGameBtn.addEventListener('click', () => {
   // Sterne NICHT anzeigen, da wir im Hauptmenü sind, nicht auf der Titelseite
   // startJourneySection bleibt versteckt
   // mainMenuSection bleibt sichtbar
+  
+  // Gamepad-Navigation für Hauptmenü aktivieren
+  setTimeout(() => {
+    setupGamepadNavigation('title');
+  }, 100);
 });
 
 // Continue Button
@@ -619,12 +689,35 @@ settingsBackBtn.addEventListener('click', () => {
           btn.classList.remove('level-button-enter', 'level-button-enter-delay-1', 'level-button-enter-delay-2');
           btn.style.opacity = '';
           btn.style.transform = '';
+          
+          // Navigation aktivieren, wenn der letzte Button (index 3) fertig animiert ist
+          if (index === 3) {
+            setTimeout(() => {
+              setupGamepadNavigation('title');
+            }, 100);
+          }
         }, 500);
       }, 50 + (index * 100));
     });
+    
+    // Gamepad-Navigation für Hauptmenü aktivieren (nach allen Animationen)
+    // Der letzte Button (index 3) wird nach 50 + 300 + 500 = 850ms fertig animiert
+    // Plus 100ms Puffer = 950ms, runden wir auf 1200ms für Sicherheit
+    setTimeout(() => {
+      setupGamepadNavigation('title');
+      // Zusätzlich nach weiteren 300ms nochmal prüfen (falls Buttons noch nicht sichtbar waren)
+      setTimeout(() => {
+        setupGamepadNavigation('title');
+      }, 300);
+    }, 1200);
   }
   
   // titleScreen und mainMenuSection bleiben sichtbar
+  
+  // Zusätzliche Navigation-Aktivierung als Fallback (nach allen Animationen)
+  setTimeout(() => {
+    setupGamepadNavigation('title');
+  }, 1200);
 });
 
 // Music Volume Slider
@@ -665,6 +758,9 @@ backToTitleFromMainBtn.addEventListener('click', () => {
   
   // Nach der Ausblend-Animation zurück zum Titelbildschirm
   setTimeout(() => {
+    // Navigation explizit deaktivieren, um alte Buttons zu entfernen
+    gamepad.disableMenuNavigation();
+    
     mainMenuSection.classList.add('hidden');
     menuButtons.forEach(btn => {
       btn.classList.remove('start-journey-exit');
@@ -695,6 +791,16 @@ backToTitleFromMainBtn.addEventListener('click', () => {
     stopLevelMusic();
     ensureAudio();
     startBackgroundMusic();
+    
+    // Gamepad-Navigation für Start Journey Screen aktivieren (nach Animation)
+    // Warte bis Start Journey Button fertig animiert ist (50ms + 600ms Animation = 650ms)
+    setTimeout(() => {
+      setupGamepadNavigation('title');
+      // Zusätzlicher Fallback nach 300ms
+      setTimeout(() => {
+        setupGamepadNavigation('title');
+      }, 300);
+    }, 700);
   }, 600);
 });
 
@@ -759,6 +865,11 @@ backToTitleBtn.addEventListener('click', () => {
     backToTitleBtn.classList.remove('start-journey-exit');
     // titleScreen und mainMenuSection bleiben sichtbar (kein showScreen('title') nötig)
     // Musik bleibt gestoppt im Hauptmenü
+    
+    // Gamepad-Navigation für Hauptmenü aktivieren
+    setTimeout(() => {
+      setupGamepadNavigation('title');
+    }, 700);
   }, 600);
 });
 
@@ -799,12 +910,79 @@ function gameLoop(){
   last = performance.now();
   accumulator += realDT;
 
+  // Gamepad-Inputs aktualisieren
+  gamepad.update(realDT);
+
+  // Menü-Navigation mit Gamepad (immer prüfen, nicht nur wenn paused)
+  // Nur wenn nicht im Spiel oder pausiert
+  if (game.state !== 'play' || game.paused) {
+    const nav = gamepad.handleMenuNavigation(realDT);
+    if (nav) {
+      if (nav.action === 'confirm' && nav.button) {
+        // Button klicken
+        ensureAudio();
+        nav.button.click();
+      } else if (nav.action === 'back') {
+        handleGamepadBack();
+      }
+    }
+    
+    // Prüfe regelmäßig, ob Navigation aktualisiert werden muss (alle 0.5 Sekunden)
+    if (!gamepadNavigationCheckTime || (performance.now() - gamepadNavigationCheckTime) > 500) {
+      gamepadNavigationCheckTime = performance.now();
+      // Prüfe aktuellen Screen und aktiviere Navigation falls nötig
+      if (gamepad.isConnected() && !gamepad.menuNavigation.enabled) {
+        // Navigation ist deaktiviert, aber wir sind in einem Menü - reaktiviere
+        if (game.state === 'title' || game.state === 'levelSelect' || 
+            (game.state === 'play' && game.paused) || 
+            game.state === 'levelComplete' || game.state === 'gameComplete') {
+          // Bestimme den richtigen Screen-Namen
+          let screenName = game.state;
+          if (game.state === 'play' && game.paused) {
+            screenName = 'pause';
+          }
+          setupGamepadNavigation(screenName);
+        }
+      }
+    }
+  }
+
   while (accumulator >= fixedDT) {
     const dt = fixedDT;
     accumulator -= fixedDT;
 
+    // Gamepad Pause-Handling
+    if (gamepad.isPausePressed() && game.state === 'play') {
+      if (game.paused) {
+        // Spiel fortsetzen - Menü verstecken
+        game.paused = false;
+        pauseMenu.classList.add('hidden');
+        overlay.classList.add('hidden');
+        gamepad.disableMenuNavigation();
+      } else {
+        // Spiel pausieren - Menü anzeigen
+        game.paused = true;
+        showScreen('pause');
+        overlay.classList.remove('hidden');
+        // Gamepad-Navigation für Pausenmenü aktivieren (mit mehreren Delays für Sicherheit)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setupGamepadNavigation('pause');
+            // Zusätzlicher Fallback nach weiteren 200ms
+            setTimeout(() => {
+              setupGamepadNavigation('pause');
+            }, 200);
+            // Noch ein Fallback nach weiteren 300ms
+            setTimeout(() => {
+              setupGamepadNavigation('pause');
+            }, 500);
+          });
+        });
+      }
+    }
+
     if (game.state === 'play' && !game.paused) {
-      game.update(dt, keys);
+      game.update(dt, keys, gamepad);
       
       // Prüfen, ob Boss besiegt wurde
       if (game.bossDefeated && !levelCompleteDelayStarted) {
@@ -834,7 +1012,26 @@ function gameLoop(){
           levelCompleteTitle.textContent = `LEVEL ${game.currentLevel} COMPLETE!`;
           levelCompleteText.textContent = 'Congratulations! You have successfully completed the level.';
           nextLevelBtn.style.display = 'block';
+          // Stelle sicher, dass backToLevelSelectBtn auch sichtbar ist
+          if (backToLevelSelectBtn) {
+            backToLevelSelectBtn.style.display = 'block';
+          }
           showScreen('levelComplete');
+          // Gamepad-Navigation für Level Complete aktivieren (mit mehreren Delays für Sicherheit)
+          // Warte bis DOM aktualisiert ist - verwende requestAnimationFrame für bessere Timing
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setupGamepadNavigation('levelComplete');
+              // Zusätzlicher Fallback nach weiteren 200ms
+              setTimeout(() => {
+                setupGamepadNavigation('levelComplete');
+              }, 200);
+              // Noch ein Fallback nach weiteren 300ms
+              setTimeout(() => {
+                setupGamepadNavigation('levelComplete');
+              }, 500);
+            });
+          });
         }
         // Reset für nächstes Level
         levelCompleteDelayStarted = false;
@@ -869,6 +1066,10 @@ const fixedDT = 1.0 / targetFPS;
 // Initial state
 game.state = 'title';
 showScreen('title');
+// Gamepad-Navigation für Start Journey Screen aktivieren
+setTimeout(() => {
+  setupGamepadNavigation('title');
+}, 200);
 // Settings laden
 loadSettings();
 // Hintergrundmusik starten (nach showScreen, damit alles initialisiert ist)
