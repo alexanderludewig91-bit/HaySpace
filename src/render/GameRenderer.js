@@ -78,7 +78,7 @@ export function drawEnemy(ctx, e, hardMode){
 
   // Farben basierend auf Gegner-Typ (hue aus e.hue)
   const hue = e.hue || 340;
-  const glowColor = `hsla(${hue}, 100%, 60%, ${e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' ? 0.55 : 0.48})`;
+  const glowColor = `hsla(${hue}, 100%, 60%, ${e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' || e.kind==='reaper' || e.kind==='titan' || e.kind==='void' || e.kind==='apocalypse' ? 0.55 : 0.48})`;
   drawGlowCircle(ctx, e.x, e.y, e.r*1.15, glowColor, 1);
 
   ctx.translate(e.x, e.y);
@@ -102,15 +102,20 @@ export function drawEnemy(ctx, e, hardMode){
   ctx.ellipse(0, -e.r*0.18, e.r*0.65, e.r*0.45, 0, 0, Math.PI*2);
   ctx.stroke();
 
-  drawGlowCircle(ctx, e.r*0.22, -e.r*0.08, e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer'? 8 : 6, 'rgba(255,209,102,0.90)', 1);
+  drawGlowCircle(ctx, e.r*0.22, -e.r*0.08, e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' || e.kind==='reaper' || e.kind==='titan' || e.kind==='void' || e.kind==='apocalypse'? 8 : 6, 'rgba(255,209,102,0.90)', 1);
 
-  // HP-Bar für Tank, Guardian und Destroyer
-  if (e.kind === 'tank' || e.kind === 'guardian' || e.kind === 'destroyer'){
+  // HP-Bar für große Gegner
+  if (e.kind === 'tank' || e.kind === 'guardian' || e.kind === 'destroyer' || 
+      e.kind === 'reaper' || e.kind === 'titan' || e.kind === 'void' || e.kind === 'apocalypse'){
     const w = 70;
     let maxHP;
     if (e.kind === 'tank') maxHP = hardMode ? 14 : 10;
     else if (e.kind === 'guardian') maxHP = hardMode ? 18 : 14;
-    else maxHP = hardMode ? 24 : 20;
+    else if (e.kind === 'destroyer') maxHP = hardMode ? 24 : 20;
+    else if (e.kind === 'reaper') maxHP = hardMode ? 30 : 26;
+    else if (e.kind === 'titan') maxHP = hardMode ? 36 : 30;
+    else if (e.kind === 'void') maxHP = hardMode ? 40 : 34;
+    else maxHP = hardMode ? 48 : 40; // apocalypse
     
     const hp = clamp(e.hp, 0, maxHP);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -294,6 +299,159 @@ export function drawBoss(ctx, b){
     ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.arc(0, 0, b.r*0.8, 0, Math.PI*2);
+    ctx.stroke();
+  } else if (level === 4) {
+    // Level 4 Boss: Sternförmiges Design mit rotierenden Segmenten
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.8, 'rgba(100,200,255,0.50)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.4, 'rgba(50,150,255,0.45)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.0, 'rgba(0,100,255,0.40)', 1);
+
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.t * 0.7); // Mittlere Rotation
+
+    // Hauptkörper: Stern (10 Zacken)
+    const shell = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r);
+    shell.addColorStop(0,'rgba(255,255,255,0.95)');
+    shell.addColorStop(0.3,'rgba(150,200,255,0.90)');
+    shell.addColorStop(0.6,'rgba(50,150,255,0.85)');
+    shell.addColorStop(1,'rgba(0,100,200,0.90)');
+
+    ctx.shadowColor = 'rgba(50,150,255,0.70)';
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    // Stern mit 10 Zacken zeichnen
+    for (let i = 0; i < 10; i++) {
+      const angle = (Math.PI / 5) * i - Math.PI / 2;
+      const radius = (i % 2 === 0) ? b.r : b.r * 0.6;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Rotierende äußere Segmente
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = 'rgba(100,200,255,0.80)';
+    ctx.save();
+    ctx.rotate(-b.t * 1.2);
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI / 4) * i;
+      const x = Math.cos(angle) * b.r * 1.3;
+      const y = Math.sin(angle) * b.r * 1.3;
+      drawGlowCircle(ctx, x, y, 12, 'rgba(100,200,255,0.90)', 1);
+    }
+    ctx.restore();
+
+    // Zentrum
+    ctx.shadowBlur = 0;
+    drawGlowCircle(ctx, 0, 0, 32, 'rgba(50,150,255,0.95)', 1);
+    drawGlowCircle(ctx, 0, 0, 16, 'rgba(0,0,0,0.40)', 1);
+    
+    // Pulsierendes Zentrum
+    const centerPulse = 0.5 + 0.5*Math.sin(b.t*12);
+    drawGlowCircle(ctx, 0, 0, 10 + centerPulse * 5, 'rgba(255,255,255,0.90)', 1);
+
+    // HP-Ring
+    const hpRatio = b.hp/b.hpMax;
+    const pulse = 0.4 + 0.6*Math.sin(b.t*12);
+    ctx.strokeStyle = `rgba(108,255,154,${0.30 + (1-hpRatio)*0.30 + pulse*0.15})`;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.85, 0, Math.PI*2);
+    ctx.stroke();
+  } else if (level === 5) {
+    // Level 5 Boss: Komplexes Design mit mehreren konzentrischen Ringen und Spikes
+    drawGlowCircle(ctx, b.x, b.y, b.r*2.0, 'rgba(255,0,100,0.55)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.6, 'rgba(200,0,150,0.50)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*1.2, 'rgba(150,0,200,0.45)', 1);
+    drawGlowCircle(ctx, b.x, b.y, b.r*0.8, 'rgba(100,0,255,0.40)', 1);
+
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.t * 0.9); // Schnelle Rotation
+
+    // Hauptkörper: Zwölfeck (Dodekagon)
+    const shell = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r);
+    shell.addColorStop(0,'rgba(255,255,255,0.98)');
+    shell.addColorStop(0.2,'rgba(255,100,200,0.95)');
+    shell.addColorStop(0.4,'rgba(200,0,150,0.90)');
+    shell.addColorStop(0.6,'rgba(150,0,200,0.85)');
+    shell.addColorStop(1,'rgba(100,0,255,0.90)');
+
+    ctx.shadowColor = 'rgba(200,0,150,0.75)';
+    ctx.shadowBlur = 44;
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    // Dodekagon zeichnen
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI / 6) * i - Math.PI / 2;
+      const x = Math.cos(angle) * b.r;
+      const y = Math.sin(angle) * b.r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Äußere Spikes (länger und aggressiver)
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = 'rgba(255,100,200,0.90)';
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI / 6) * i - Math.PI / 2;
+      const x = Math.cos(angle) * b.r * 1.3;
+      const y = Math.sin(angle) * b.r * 1.3;
+      const spikeX = Math.cos(angle) * b.r * 1.6;
+      const spikeY = Math.sin(angle) * b.r * 1.6;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(spikeX, spikeY);
+      const spikeAngle1 = angle + Math.PI / 12;
+      const spikeAngle2 = angle - Math.PI / 12;
+      ctx.lineTo(Math.cos(spikeAngle1) * b.r * 1.2, Math.sin(spikeAngle1) * b.r * 1.2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Rotierende innere Ringe (gegenläufig)
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = 'rgba(255,209,102,0.80)';
+    ctx.lineWidth = 4;
+    ctx.save();
+    ctx.rotate(-b.t * 1.0);
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.7, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+    
+    ctx.save();
+    ctx.rotate(b.t * 1.5);
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.5, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Zentrum
+    ctx.shadowBlur = 0;
+    drawGlowCircle(ctx, 0, 0, 36, 'rgba(200,0,150,0.98)', 1);
+    drawGlowCircle(ctx, 0, 0, 18, 'rgba(0,0,0,0.45)', 1);
+    
+    // Stark pulsierendes Zentrum
+    const centerPulse = 0.4 + 0.6*Math.sin(b.t*15);
+    drawGlowCircle(ctx, 0, 0, 12 + centerPulse * 6, 'rgba(255,255,255,0.95)', 1);
+    
+    // Innerer Kern
+    const innerPulse = 0.3 + 0.7*Math.sin(b.t*20);
+    drawGlowCircle(ctx, 0, 0, 6 + innerPulse * 4, 'rgba(255,100,200,0.90)', 1);
+
+    // HP-Ring
+    const hpRatio = b.hp/b.hpMax;
+    const pulse = 0.4 + 0.6*Math.sin(b.t*15);
+    ctx.strokeStyle = `rgba(108,255,154,${0.35 + (1-hpRatio)*0.35 + pulse*0.18})`;
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r*0.9, 0, Math.PI*2);
     ctx.stroke();
   }
 

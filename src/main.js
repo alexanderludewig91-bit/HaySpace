@@ -124,7 +124,7 @@ function renderLevelSelect() {
   
   // Erst alle Buttons erstellen und zum DOM hinzufügen
   const buttons = [];
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 5; i++) {
     const levelBtn = document.createElement('button');
     levelBtn.className = 'btn';
     levelBtn.style.width = '100%';
@@ -162,6 +162,8 @@ function renderLevelSelect() {
         btn.classList.add('level-button-enter');
         if (index === 2) btn.classList.add('level-button-enter-delay-1');
         if (index === 3) btn.classList.add('level-button-enter-delay-2');
+        if (index === 4) btn.classList.add('level-button-enter-delay-2'); // Gleiche Delay wie Level 3
+        if (index === 5) btn.classList.add('level-button-enter-delay-2'); // Gleiche Delay wie Level 3
         
         // Animation-Klassen nach Animation entfernen
         setTimeout(() => {
@@ -173,7 +175,7 @@ function renderLevelSelect() {
             btn.style.opacity = '0.5';
           }
         }, 500);
-      }, 200 + (index - 1) * 100); // 200ms, 300ms, 400ms Delay
+      }, 200 + (index - 1) * 100); // 200ms, 300ms, 400ms, 500ms, 600ms Delay
     });
   });
 }
@@ -761,7 +763,7 @@ backToTitleBtn.addEventListener('click', () => {
 });
 
 nextLevelBtn.addEventListener('click', () => {
-  if (game.currentLevel < 3) {
+  if (game.currentLevel < 5) {
     startLevel(game.currentLevel + 1);
   } else {
     showScreen('gameComplete');
@@ -826,7 +828,7 @@ function gameLoop(){
       if (performance.now() - levelCompleteTime >= 2000) {
         // State auf levelComplete setzen und Menü anzeigen
         game.state = 'levelComplete';
-        if (game.currentLevel === 3) {
+        if (game.currentLevel === 5) {
           showScreen('gameComplete');
         } else {
           levelCompleteTitle.textContent = `LEVEL ${game.currentLevel} COMPLETE!`;

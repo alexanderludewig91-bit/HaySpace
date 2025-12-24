@@ -9,6 +9,8 @@ export function initDevMode(game, resetLocalStorage) {
   const devUnlockLevel1 = document.getElementById('devUnlockLevel1');
   const devUnlockLevel2 = document.getElementById('devUnlockLevel2');
   const devUnlockLevel3 = document.getElementById('devUnlockLevel3');
+  const devUnlockLevel4 = document.getElementById('devUnlockLevel4');
+  const devUnlockLevel5 = document.getElementById('devUnlockLevel5');
   const devUnlockAll = document.getElementById('devUnlockAll');
   const devClearSave = document.getElementById('devClearSave');
   const devShowSave = document.getElementById('devShowSave');
@@ -72,10 +74,22 @@ export function initDevMode(game, resetLocalStorage) {
     alert('Level 3 unlocked!');
   });
 
+  devUnlockLevel4.addEventListener('click', () => {
+    game.unlockLevel(4);
+    alert('Level 4 unlocked!');
+  });
+
+  devUnlockLevel5.addEventListener('click', () => {
+    game.unlockLevel(5);
+    alert('Level 5 unlocked!');
+  });
+
   devUnlockAll.addEventListener('click', () => {
     game.unlockLevel(1);
     game.unlockLevel(2);
     game.unlockLevel(3);
+    game.unlockLevel(4);
+    game.unlockLevel(5);
     alert('All levels unlocked!');
   });
 

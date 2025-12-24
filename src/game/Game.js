@@ -190,6 +190,46 @@ export class Game {
       base.hue = 10; // Rot-Orange
     }
 
+    // Level 4 Gegner (sehr schwer)
+    if (kind === 'reaper') {
+      base.r = 24;
+      base.hp = this.hardMode ? 30 : 26;
+      base.vy = rand(50, 70);
+      base.vx = rand(-35, 35);
+      base.score = 180;
+      base.shootCD = rand(0.9, 1.5);
+      base.hue = 300; // Magenta
+    }
+
+    if (kind === 'titan') {
+      base.r = 26;
+      base.hp = this.hardMode ? 36 : 30;
+      base.vy = rand(40, 55);
+      base.score = 200;
+      base.shootCD = rand(1.2, 2.0);
+      base.hue = 15; // Rot
+    }
+
+    // Level 5 Gegner (extrem schwer)
+    if (kind === 'void') {
+      base.r = 28;
+      base.hp = this.hardMode ? 40 : 34;
+      base.vy = rand(45, 65);
+      base.vx = rand(-40, 40);
+      base.score = 220;
+      base.shootCD = rand(0.8, 1.4);
+      base.hue = 240; // Blau
+    }
+
+    if (kind === 'apocalypse') {
+      base.r = 30;
+      base.hp = this.hardMode ? 48 : 40;
+      base.vy = rand(38, 52);
+      base.score = 250;
+      base.shootCD = rand(1.0, 1.8);
+      base.hue = 0; // Rot
+    }
+
     this.enemies.push(base);
   }
 
@@ -207,9 +247,15 @@ export class Game {
       } else if (this.currentLevel === 2) {
         // Level 2: Neue Gegner-Typen
         kind = (Math.random()<0.5) ? 'hunter' : (Math.random()<0.75 ? 'crusher' : 'guardian');
-      } else {
+      } else if (this.currentLevel === 3) {
         // Level 3: Noch schwerere Gegner
         kind = (Math.random()<0.4) ? 'hunter' : (Math.random()<0.7 ? 'crusher' : (Math.random()<0.9 ? 'guardian' : 'destroyer'));
+      } else if (this.currentLevel === 4) {
+        // Level 4: Sehr schwere Gegner
+        kind = (Math.random()<0.35) ? 'crusher' : (Math.random()<0.65 ? 'guardian' : (Math.random()<0.85 ? 'reaper' : 'titan'));
+      } else {
+        // Level 5: Extrem schwere Gegner
+        kind = (Math.random()<0.3) ? 'guardian' : (Math.random()<0.6) ? 'reaper' : (Math.random()<0.85 ? 'void' : 'apocalypse');
       }
       this.spawnEnemy(kind, rand(80, W-80), rand(-520, -120));
     }
@@ -232,6 +278,14 @@ export class Game {
       // Level 3: 50% mehr HP, deutlich aggressiver
       hpMultiplier = 1.5;
       shootCDBase = 0.5;
+    } else if (this.currentLevel === 4) {
+      // Level 4: 75% mehr HP, sehr aggressiv
+      hpMultiplier = 1.75;
+      shootCDBase = 0.45;
+    } else if (this.currentLevel === 5) {
+      // Level 5: 100% mehr HP, extrem aggressiv
+      hpMultiplier = 2.0;
+      shootCDBase = 0.4;
     }
     
     const hpMax = Math.round(baseHP * hpMultiplier);
@@ -357,6 +411,10 @@ export class Game {
       basePetals = this.hardMode ? 13 : 11;
     } else if (this.boss.level === 3) {
       basePetals = this.hardMode ? 14 : 12;
+    } else if (this.boss.level === 4) {
+      basePetals = this.hardMode ? 15 : 13;
+    } else if (this.boss.level === 5) {
+      basePetals = this.hardMode ? 16 : 14;
     }
     const petals = basePetals;
     
@@ -600,7 +658,7 @@ export class Game {
           for (let k=0;k<14;k++) this.addExplosion(this.boss.x+rand(-90,90), this.boss.y+rand(-70,70), 1.1);
           this.boss = null;
           // Level-Ende: Nächstes Level freischalten
-          if (this.currentLevel < 3) {
+          if (this.currentLevel < 5) {
             this.unlockLevel(this.currentLevel + 1);
           }
           // Flag setzen, dass Boss besiegt wurde, aber Spiel läuft noch weiter
