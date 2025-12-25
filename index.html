@@ -42,6 +42,11 @@
 
   <!-- Dev Mode Button -->
   <button id="devModeBtn" class="dev-mode-btn">Dev Mode</button>
+  <!-- LocalStorage Info Display -->
+  <div id="localStorageInfo" style="position: fixed; bottom: 60px; right: 20px; background: rgba(0,0,0,0.8); border: 1px solid rgba(100,255,200,0.3); border-radius: 8px; padding: 12px; font-size: 11px; color: rgba(245,250,255,0.9); max-width: 300px; z-index: 1000; font-family: 'Courier New', monospace;">
+    <div style="font-weight: bold; color: rgba(100,255,200,1); margin-bottom: 8px;">LocalStorage:</div>
+    <div id="localStorageContent" style="white-space: pre-wrap; word-break: break-all;"></div>
+  </div>
 
   <div id="overlay">
     <!-- Title Screen with Background Image -->
@@ -89,6 +94,31 @@
               </div>
               <div class="row" style="margin-top:20px">
                 <button class="btn btn-large" id="settingsBackBtn">Back</button>
+              </div>
+            </div>
+            <!-- Neue Seite 3: Level-Auswahl/Werft-Auswahl -->
+            <div id="gameMenuContent" style="display: none;">
+              <h1>GAME MENU</h1>
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px; min-width: 400px;">
+                <button class="btn btn-large" id="levelSelectMenuBtn">Level Select</button>
+                <button class="btn btn-large" id="shopBtn">Werft</button>
+              </div>
+              <div class="row" style="margin-top:20px">
+                <button class="btn btn-large" id="gameMenuBackBtn">Back</button>
+              </div>
+            </div>
+            <!-- Shop/Werft Content -->
+            <div id="shopContent" style="display: none;">
+              <h1>WERFT</h1>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span style="font-size: 16px; color: rgba(245,250,255,0.9);">Credits:</span>
+                <span id="creditsDisplay" style="font-size: 18px; color: rgba(100,255,200,1); font-weight: bold;">0</span>
+              </div>
+              <div id="shopUpgrades" style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px; min-width: 400px;">
+                <!-- Upgrades werden dynamisch eingefügt -->
+              </div>
+              <div class="row" style="margin-top:20px">
+                <button class="btn btn-large" id="shopBackBtn">Back</button>
               </div>
             </div>
           </div>
@@ -168,6 +198,7 @@
           <div class="row" style="gap: 8px;">
             <button class="btn" id="devClearSave">Clear Save Game</button>
             <button class="btn" id="devShowSave">Show Current Save</button>
+            <button class="btn" id="devAddCredits">Add 10k Credits</button>
           </div>
         </div>
         <div id="devSaveInfo" style="padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 12px; display: none;">

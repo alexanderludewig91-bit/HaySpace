@@ -27,9 +27,9 @@ Das Projekt ist modular aufgebaut, um Wartbarkeit und Skalierbarkeit zu gewährl
 
 ```
 src/
-├── main.js                 # Einstiegspunkt (931 Zeilen)
+├── main.js                 # Einstiegspunkt (1133 Zeilen)
 │                           # - Canvas-Initialisierung
-│                           # - Input-Handling
+│                           # - Input-Handling (Keyboard + Gamepad)
 │                           # - Game-Loop mit Fixed Timestep
 │                           # - UI-Management (Titelbildschirm, Menüs, Settings)
 │                           # - Levelauswahl-UI
@@ -73,6 +73,11 @@ src/
 │   │                       # - Overheat-Warnung
 │   │                       # - Score/Wave-Overlay oben rechts
 │   │
+│   ├── GamepadMenuNavigation.js  # Gamepad-Menü-Navigation (227 Zeilen)
+│   │                              # - Automatische Button-Erkennung
+│   │                              # - Menü-Navigation mit D-Pad/Stick
+│   │                              # - Back-Button-Handling
+│   │
 │   └── DevMode.js         # Dev Mode Panel (199 Zeilen)
 │                           # - Level-Unlock-Funktionen
 │                           # - Save-Game-Management
@@ -83,10 +88,18 @@ src/
 │   │                       # - WebAudio API Integration
 │   │                       # - SFX-Funktionen (shoot, hit, upgrade, etc.)
 │   │                       # - ensureAudio() - Audio-Context-Management
-│   │                       # - Hintergrundmusik-System (Intro, Level 1-3)
+│   │                       # - Hintergrundmusik-System (Intro, Level 1-5)
 │   │                       # - Lautstärke-Kontrolle (Musik & SFX)
 │   │                       # - MP3-Audio-Unterstützung
 │   │                       # - Autoplay-Policy Workaround
+│   │
+│   ├── GamepadSystem.js   # Gamepad-System (313 Zeilen)
+│   │                       # - Xbox Controller Support
+│   │                       # - Bewegung (Left Stick / D-Pad)
+│   │                       # - Schießen (A Button / Right Trigger)
+│   │                       # - Dash (B Button / Left Trigger)
+│   │                       # - Pause (Start Button)
+│   │                       # - Menü-Navigation (D-Pad / Left Stick)
 │   │
 │   └── InputSystem.js     # Input-System (für zukünftige Erweiterungen)
 │                           # - Keyboard-Input-Handling
@@ -191,13 +204,12 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
 
 ### Levelsystem
 
-Das Spiel besteht aus **3 Leveln**, die nacheinander freigeschaltet werden:
+Das Spiel besteht aus **5 Leveln**, die nacheinander freigeschaltet werden:
 
 #### Level-Freischaltung
 - **Level 1**: Immer verfügbar
-- **Level 2**: Wird nach Abschluss von Level 1 freigeschaltet
-- **Level 3**: Wird nach Abschluss von Level 2 freigeschaltet
-- Freigeschaltete Level werden im **LocalStorage** gespeichert (Key: `'unlockedLevels'`, Value: JSON-Array wie `[1,2,3]`)
+- **Level 2-5**: Werden nacheinander nach Abschluss des vorherigen Levels freigeschaltet
+- Freigeschaltete Level werden im **LocalStorage** gespeichert (Key: `'unlockedLevels'`, Value: JSON-Array wie `[1,2,3,4,5]`)
 
 #### Gegner-Typen je Level
 
@@ -221,13 +233,15 @@ Das Spiel besteht aus **3 Leveln**, die nacheinander freigeschaltet werden:
 - **Level 1**: 5 normale Wellen + Boss (Boss bei Welle 6)
 - **Level 2**: 6 normale Wellen + Boss (Boss bei Welle 7)
 - **Level 3**: 7 normale Wellen + Boss (Boss bei Welle 8)
+- **Level 4**: 8 normale Wellen + Boss (Boss bei Welle 9)
+- **Level 5**: 9 normale Wellen + Boss (Boss bei Welle 10)
 - **Formel**: `bossWave = 5 + currentLevel`
 - **Gegner-Anzahl**: Skaliert mit Wellennummer (`6 + n*2 + (hardMode?2:0)`)
 
 #### Level-Ende
 - Nach Abschluss eines Levels (Boss besiegt) erscheint ein Overlay mit Gratulation
-- **Level 1 & 2**: Optionen "Nächstes Level" oder "Zur Levelauswahl"
-- **Level 3**: Nur "Zur Levelauswahl" (Spiel-Ende)
+- **Level 1-4**: Optionen "Nächstes Level" oder "Zur Levelauswahl"
+- **Level 5**: Nur "Zur Levelauswahl" (Spiel-Ende)
 
 #### Code-Stellen
 - **Gegner-Auswahl je Level**: `src/game/Game.js`, Zeilen 196-216 (`spawnWave()`)
@@ -241,9 +255,21 @@ Das Spiel besteht aus **3 Leveln**, die nacheinander freigeschaltet werden:
 
 ### Implementierte Features (Neueste Updates)
 
+#### Gamepad-Support
+- ✅ Xbox Controller Support (Gameplay)
+  - Bewegung: Left Stick / D-Pad
+  - Schießen: A Button / Right Trigger
+  - Dash: B Button / Left Trigger
+  - Pause: Start Button (drei Balken)
+- ✅ Gamepad-Menü-Navigation
+  - Navigation durch alle Menüs mit D-Pad / Left Stick
+  - Automatische Button-Erkennung
+  - Back-Button-Handling (B Button)
+  - Fokus-Highlighting für aktiven Button
+
 #### Audio-System
 - ✅ Hintergrundmusik für Titelbildschirm (Intro.mp3)
-- ✅ Level-spezifische Hintergrundmusik (Level1-3.mp3)
+- ✅ Level-spezifische Hintergrundmusik (Level1-5.mp3)
 - ✅ Musik-Lautstärke-Kontrolle (0-100%)
 - ✅ Soundeffekte-Lautstärke-Kontrolle (0-100%)
 - ✅ Settings-Menü mit Slidern
@@ -468,6 +494,9 @@ node scripts/fix-base-path.js
 - **Canvas-Größe**: 1600x900px
 - **Fixed Timestep**: 60 FPS (1/60 Sekunden)
 - **Collision Detection**: Circle-based mit `Math.hypot()`
+- **Input**: 
+  - Keyboard (Pfeiltasten, Space, P, Enter)
+  - Gamepad (Xbox Controller via Web Gamepad API)
 - **Audio**: 
   - WebAudio API für procedural SFX
   - HTML5 Audio für Hintergrundmusik (MP3)
@@ -497,9 +526,11 @@ npm run preview  # Teste Production-Build lokal
 - **Zu groß**: >1000 Zeilen → sollte aufgeteilt werden
 
 Aktuelle Dateigrößen:
-- `main.js`: 931 Zeilen ⚠️ (erweitert durch UI-Management)
-- `Game.js`: 723 Zeilen ✅
+- `main.js`: 1133 Zeilen ⚠️ (erweitert durch UI-Management)
+- `Game.js`: 798 Zeilen ✅
 - `GameRenderer.js`: 450+ Zeilen ✅
+- `GamepadSystem.js`: 313 Zeilen ✅
+- `GamepadMenuNavigation.js`: 227 Zeilen ✅
 - `HUD.js`: 262 Zeilen ✅
 - `AudioSystem.js`: 184 Zeilen ✅
 - `DevMode.js`: 199 Zeilen ✅

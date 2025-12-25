@@ -24,8 +24,14 @@ export function initGamepadMenuNavigation(elements, gamepad, ensureAudio) {
         return;
       } else if (!elements.mainMenuSection.classList.contains('hidden')) {
         // Hauptmenü
-        if (elements.levelSelectContent && elements.levelSelectContent.style.display !== 'none') {
-          // In Level-Auswahl -> zurück zum Hauptmenü
+        if (elements.shopContent && elements.shopContent.style.display !== 'none') {
+          // In Shop -> zurück zum Game Menu
+          elements.shopBackBtn.click();
+        } else if (elements.gameMenuContent && elements.gameMenuContent.style.display !== 'none') {
+          // In Game Menu -> zurück zum Hauptmenü
+          elements.gameMenuBackBtn.click();
+        } else if (elements.levelSelectContent && elements.levelSelectContent.style.display !== 'none') {
+          // In Level-Auswahl -> zurück zum Game Menu
           elements.backToTitleBtn.click();
         } else if (elements.settingsContent && elements.settingsContent.style.display !== 'none') {
           // In Settings -> zurück zum Hauptmenü
@@ -71,6 +77,8 @@ export function initGamepadMenuNavigation(elements, gamepad, ensureAudio) {
     const isMainMenuVisible = elements.mainMenuSection && !elements.mainMenuSection.classList.contains('hidden');
     const isLevelSelectVisible = elements.levelSelectContent && elements.levelSelectContent.style.display !== 'none';
     const isSettingsVisible = elements.settingsContent && elements.settingsContent.style.display !== 'none';
+    const isGameMenuVisible = elements.gameMenuContent && elements.gameMenuContent.style.display !== 'none';
+    const isShopVisible = elements.shopContent && elements.shopContent.style.display !== 'none';
     const isPauseVisible = elements.pauseMenu && !elements.pauseMenu.classList.contains('hidden');
     const isLevelCompleteVisible = elements.levelComplete && !elements.levelComplete.classList.contains('hidden');
     const isGameCompleteVisible = elements.gameComplete && !elements.gameComplete.classList.contains('hidden');
@@ -166,11 +174,18 @@ export function initGamepadMenuNavigation(elements, gamepad, ensureAudio) {
       const levelButtons = elements.levelList.querySelectorAll('.btn:not([disabled])');
       buttons = Array.from(levelButtons);
       if (elements.backToTitleBtn) buttons.push(elements.backToTitleBtn);
+    } else if (isShopVisible) {
+      // Shop/Werft
+      buttons = [elements.shopBackBtn].filter(btn => btn && btn.offsetParent !== null);
+      // Shop-Upgrade-Buttons werden dynamisch hinzugefügt (wird von Shop.js gehandhabt)
+    } else if (isGameMenuVisible) {
+      // Game Menu (Seite 3: Level-Auswahl/Werft)
+      buttons = [elements.levelSelectMenuBtn, elements.shopBtn, elements.gameMenuBackBtn].filter(btn => btn && btn.offsetParent !== null);
     } else if (isSettingsVisible) {
       // Settings
       buttons = [elements.settingsBackBtn].filter(btn => btn && btn.offsetParent !== null);
-    } else if (isMainMenuVisible && !isLevelSelectVisible && !isSettingsVisible) {
-      // Hauptmenü-Buttons (nur wenn weder Level-Auswahl noch Settings sichtbar sind)
+    } else if (isMainMenuVisible && !isLevelSelectVisible && !isSettingsVisible && !isGameMenuVisible && !isShopVisible) {
+      // Hauptmenü-Buttons (nur wenn keine anderen Contents sichtbar sind)
       buttons = [elements.newGameBtn, elements.continueBtn, elements.settingsBtn, elements.backToTitleFromMainBtn].filter(btn => btn && btn.offsetParent !== null);
     }
     

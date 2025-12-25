@@ -8,6 +8,8 @@ import { Starfield } from './background/Starfield.js';
 import { initDevMode } from './ui/DevMode.js';
 import { GamepadSystem } from './systems/GamepadSystem.js';
 import { initGamepadMenuNavigation } from './ui/GamepadMenuNavigation.js';
+import { UpgradeSystem } from './systems/UpgradeSystem.js';
+import { Shop } from './ui/Shop.js';
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -25,6 +27,8 @@ const mainMenuCard = document.getElementById('mainMenuCard');
 const mainMenuButtons = document.getElementById('mainMenuButtons');
 const levelSelectContent = document.getElementById('levelSelectContent');
 const settingsContent = document.getElementById('settingsContent');
+const gameMenuContent = document.getElementById('gameMenuContent');
+const shopContent = document.getElementById('shopContent');
 const levelSelect = document.getElementById('levelSelect');
 const levelList = document.getElementById('levelList');
 const levelComplete = document.getElementById('levelComplete');
@@ -47,6 +51,10 @@ const newGameWarning = document.getElementById('newGameWarning');
 const confirmNewGameBtn = document.getElementById('confirmNewGameBtn');
 const cancelNewGameBtn = document.getElementById('cancelNewGameBtn');
 const settingsBackBtn = document.getElementById('settingsBackBtn');
+const levelSelectMenuBtn = document.getElementById('levelSelectMenuBtn');
+const shopBtn = document.getElementById('shopBtn');
+const gameMenuBackBtn = document.getElementById('gameMenuBackBtn');
+const shopBackBtn = document.getElementById('shopBackBtn');
 const musicVolumeSlider = document.getElementById('musicVolumeSlider');
 const sfxVolumeSlider = document.getElementById('sfxVolumeSlider');
 const musicVolumeValue = document.getElementById('musicVolumeValue');
@@ -62,13 +70,21 @@ let gamepadNavigationCheckTime = 0;
 // Gamepad System
 const gamepad = new GamepadSystem();
 
+// Upgrade System
+const upgradeSystem = new UpgradeSystem();
+
+// Shop System
+let shop = null;
+
 // Gamepad Menu Navigation initialisieren
-const menuNavigationElements = {
+  const menuNavigationElements = {
   titleScreen,
   startJourneySection,
   mainMenuSection,
   levelSelectContent,
   settingsContent,
+  gameMenuContent,
+  shopContent,
   levelList,
   levelComplete,
   gameComplete,
@@ -86,7 +102,11 @@ const menuNavigationElements = {
   backToLevelSelectFromCompleteBtn,
   confirmNewGameBtn,
   cancelNewGameBtn,
-  settingsBackBtn
+  settingsBackBtn,
+  levelSelectMenuBtn,
+  shopBtn,
+  gameMenuBackBtn,
+  shopBackBtn
 };
 
 const { setupGamepadNavigation, handleGamepadBack } = initGamepadMenuNavigation(
@@ -96,7 +116,7 @@ const { setupGamepadNavigation, handleGamepadBack } = initGamepadMenuNavigation(
 );
 
 // Game instance
-const game = new Game();
+const game = new Game(upgradeSystem);
 
 // Starfield für Titelbildschirm
 const titleStarfieldCanvas = document.getElementById('titleStarfield');
@@ -364,6 +384,8 @@ function hidePauseMenu() {
 function resetLocalStorage() {
   localStorage.removeItem('unlockedLevels');
   game.unlockedLevels = [1];
+  // Upgrade-System zurücksetzen
+  upgradeSystem.reset();
 }
 
 function loadFromLocalStorage() {
@@ -371,11 +393,58 @@ function loadFromLocalStorage() {
 }
 
 function startLevel(level) {
+  console.log('🚀 startLevel() aufgerufen für Level', level);
+  console.log('🔍 Game.upgradeSystem vorhanden?', !!game.upgradeSystem);
+  console.log('🔍 upgradeSystem (global) vorhanden?', !!upgradeSystem);
+  
   ensureAudio();
   // Level-Musik starten
   startLevelMusic(level);
   game.setLevel(level);
+  console.log('📋 resetAll() wird aufgerufen...');
   game.resetAll();
+  console.log('📋 resetAll() abgeschlossen');
+  console.log('📋 Nach resetAll - weaponLevel:', game.player.weaponLevel);
+  console.log('📋 Nach resetAll - speedBoost:', game.player.speedBoost);
+  
+  // Upgrades anwenden - DIREKT in main.js, da applyUpgrades() nicht funktioniert
+  console.log('🔧 Upgrades werden angewendet...');
+  if (game.upgradeSystem) {
+    const upgradeValues = game.upgradeSystem.getGameValues();
+    console.log('🔧 Upgrade-Werte:', upgradeValues);
+    
+    // Waffen-Level anwenden
+    const oldWeaponLevel = game.player.weaponLevel;
+    game.player.weaponLevel = upgradeValues.weaponLevel || 1;
+    console.log(`🔫 Waffen-Level: ${oldWeaponLevel} → ${game.player.weaponLevel}`);
+    
+    // Speed Boost anwenden
+    const oldSpeedBoost = game.player.speedBoost;
+    game.player.speedBoost = upgradeValues.speedBoost || 1.0;
+    console.log(`⚡ Speed Boost: ${oldSpeedBoost} → ${game.player.speedBoost}`);
+    
+    // Shield Max anwenden
+    const oldShieldMax = game.player.shieldMax;
+    game.player.shieldMax = upgradeValues.shieldMax || 100;
+    const shieldRatio = game.player.shield / oldShieldMax;
+    game.player.shield = game.player.shieldMax * shieldRatio;
+    console.log(`🛡️ Shield Max: ${oldShieldMax} → ${game.player.shieldMax}`);
+    
+    // Dash-Enabled
+    game.dashEnabled = upgradeValues.dashEnabled !== false;
+    console.log(`💨 Dash: ${game.dashEnabled}`);
+    
+    // Overheat-Reduktion
+    game.overheatReduction = upgradeValues.overheatReduction || 0;
+    console.log(`❄️ Overheat-Reduktion: ${game.overheatReduction}`);
+  } else {
+    console.warn('⚠️ UpgradeSystem nicht verfügbar!');
+  }
+  
+  console.log('🔧 Nach Anwendung - weaponLevel:', game.player.weaponLevel);
+  console.log('🔧 Nach Anwendung - speedBoost:', game.player.speedBoost);
+  console.log('🔧 Nach Anwendung - shieldMax:', game.player.shieldMax);
+  
   game.state = 'play';
   game.paused = false;
   game.hardMode = hardMode;
@@ -513,59 +582,51 @@ newGameBtn.addEventListener('click', () => {
   }
 });
 
-// Funktion für Übergang zur Levelauswahl (Karte bleibt, Buttons werden getauscht)
+// Funktion für Übergang zur Levelauswahl (Seite 4)
 function transitionToLevelSelect() {
   // Sicherstellen, dass titleScreen und mainMenuSection sichtbar sind
-  // WICHTIG: Das muss SOFORT passieren, nicht erst nach dem Timeout
   titleScreen.classList.remove('hidden');
   mainMenuSection.classList.remove('hidden');
   startJourneySection.classList.add('hidden');
   
-  // Hauptmenü-Buttons ausblenden mit Animation
-  const menuButtons = [newGameBtn, continueBtn, settingsBtn, backToTitleFromMainBtn];
-  menuButtons.forEach((btn, index) => {
-    btn.classList.add('start-journey-exit');
-  });
+  // Game Menu Content verstecken
+  if (gameMenuContent) {
+    gameMenuContent.style.display = 'none';
+  }
+  if (shopContent) {
+    shopContent.style.display = 'none';
+  }
   
-  setTimeout(() => {
-    // Hauptmenü-Buttons verstecken
-    if (mainMenuButtons) {
-      mainMenuButtons.style.display = 'none';
-    }
-    
-    // WICHTIG: Karte auf Hauptmenü-Größe setzen, BEVOR Content eingeblendet wird
-    // Dies verhindert, dass die Karte schlagartig größer wird
-    if (mainMenuCard) {
-      mainMenuCard.style.width = 'min(500px, 92vw)';
-      mainMenuCard.style.maxWidth = '500px';
-    }
-    
-    // Levelauswahl rendern BEVOR der Content eingeblendet wird
-    renderLevelSelect();
-    
-    // Levelauswahl-Content einblenden (aber Karte bleibt bei kleiner Größe)
-    if (levelSelectContent) {
-      levelSelectContent.style.display = 'block';
-    }
-    
-    // Levelauswahl-Screen anzeigen
-    showScreen('levelSelect');
-    
-    // Karte vergrößern mit Animation (nachdem alles gerendert wurde)
+  // WICHTIG: Karte auf Hauptmenü-Größe setzen, BEVOR Content eingeblendet wird
+  if (mainMenuCard) {
+    mainMenuCard.style.width = 'min(500px, 92vw)';
+    mainMenuCard.style.maxWidth = '500px';
+  }
+  
+  // Levelauswahl rendern BEVOR der Content eingeblendet wird
+  renderLevelSelect();
+  
+  // Levelauswahl-Content einblenden
+  if (levelSelectContent) {
+    levelSelectContent.style.display = 'block';
+  }
+  
+  // Levelauswahl-Screen anzeigen
+  showScreen('levelSelect');
+  
+  // Karte vergrößern mit Animation (nachdem alles gerendert wurde)
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (mainMenuCard) {
-          mainMenuCard.classList.add('card-expanding');
-          // Nach Animation die explizite Breite entfernen, damit die Standard-Card-Größe greift
-          setTimeout(() => {
-            mainMenuCard.classList.remove('card-expanding');
-            mainMenuCard.style.width = '';
-            mainMenuCard.style.maxWidth = '';
-          }, 600);
-        }
-      });
+      if (mainMenuCard) {
+        mainMenuCard.classList.add('card-expanding');
+        setTimeout(() => {
+          mainMenuCard.classList.remove('card-expanding');
+          mainMenuCard.style.width = '';
+          mainMenuCard.style.maxWidth = '';
+        }, 600);
+      }
     });
-  }, 600);
+  });
 }
 
 // Bestätigen: Neues Spiel starten
@@ -600,11 +661,107 @@ cancelNewGameBtn.addEventListener('click', () => {
 });
 
 // Continue Button
+// Continue Button - führt jetzt zu Game Menu (Seite 3)
 continueBtn.addEventListener('click', () => {
   ensureAudio();
   loadFromLocalStorage();
-  transitionToLevelSelect();
+  showGameMenu();
 });
+
+// Game Menu - Seite 3 (Level-Auswahl/Werft)
+function showGameMenu() {
+  titleScreen.classList.remove('hidden');
+  mainMenuSection.classList.remove('hidden');
+  startJourneySection.classList.add('hidden');
+  
+  // Hauptmenü-Buttons verstecken
+  if (mainMenuButtons) {
+    mainMenuButtons.style.display = 'none';
+  }
+  
+  // Game Menu Content anzeigen
+  if (gameMenuContent) {
+    gameMenuContent.style.display = 'block';
+  }
+  
+  // Andere Contents verstecken
+  if (levelSelectContent) levelSelectContent.style.display = 'none';
+  if (settingsContent) settingsContent.style.display = 'none';
+  if (shopContent) shopContent.style.display = 'none';
+  
+  // Karte auf Standard-Größe setzen
+  if (mainMenuCard) {
+    mainMenuCard.style.width = 'min(500px, 92vw)';
+    mainMenuCard.style.maxWidth = '500px';
+  }
+  
+  // Gamepad-Navigation aktivieren
+  setTimeout(() => {
+    setupGamepadNavigation('gameMenu');
+  }, 100);
+}
+
+// Level Select Menu Button (von Game Menu)
+if (levelSelectMenuBtn) {
+  levelSelectMenuBtn.addEventListener('click', () => {
+    ensureAudio();
+    transitionToLevelSelect();
+  });
+}
+
+// Shop Button (von Game Menu)
+if (shopBtn) {
+  shopBtn.addEventListener('click', () => {
+    ensureAudio();
+    showShop();
+  });
+}
+
+// Game Menu Back Button
+if (gameMenuBackBtn) {
+  gameMenuBackBtn.addEventListener('click', () => {
+    ensureAudio();
+    // Zurück zum Hauptmenü
+    if (gameMenuContent) {
+      gameMenuContent.style.display = 'none';
+    }
+    if (mainMenuButtons) {
+      mainMenuButtons.style.display = 'flex';
+      mainMenuButtons.style.flexDirection = 'column';
+      mainMenuButtons.style.gap = '16px';
+    }
+    setTimeout(() => {
+      setupGamepadNavigation('title');
+    }, 100);
+  });
+}
+
+// Shop anzeigen
+function showShop() {
+  if (gameMenuContent) {
+    gameMenuContent.style.display = 'none';
+  }
+  if (shopContent) {
+    shopContent.style.display = 'block';
+  }
+  if (shop) {
+    shop.render();
+  }
+  setTimeout(() => {
+    setupGamepadNavigation('shop');
+  }, 100);
+}
+
+// Shop Back Button
+if (shopBackBtn) {
+  shopBackBtn.addEventListener('click', () => {
+    ensureAudio();
+    if (shopContent) {
+      shopContent.style.display = 'none';
+    }
+    showGameMenu();
+  });
+}
 
 // Settings laden und anwenden
 function loadSettings() {
@@ -1052,8 +1209,8 @@ function gameLoop(){
   drawHUD(ctx, game);
   ctx.restore();
   
-  // Score/Wave Overlay oben rechts (außerhalb des Shake-Transforms)
-  drawScoreOverlay(ctx, game);
+  // Credits/Wave Overlay oben rechts (außerhalb des Shake-Transforms)
+  drawScoreOverlay(ctx, game, upgradeSystem);
 
   requestAnimationFrame(gameLoop);
 }
@@ -1126,8 +1283,24 @@ function titleStarfieldLoop() {
   requestAnimationFrame(titleStarfieldLoop);
 }
 
+// Shop initialisieren
+shop = new Shop(upgradeSystem, (upgradeType, level) => {
+  // Callback wenn Upgrade gekauft wurde
+  console.log(`Upgrade gekauft: ${upgradeType} Stufe ${level}`);
+  // Game-Werte aktualisieren (wird beim nächsten Level-Start angewendet)
+});
+shop.init();
+
+// Shop initialisieren
+shop = new Shop(upgradeSystem, (upgradeType, level) => {
+  // Callback wenn Upgrade gekauft wurde
+  console.log(`Upgrade gekauft: ${upgradeType} Stufe ${level}`);
+  // Game-Werte aktualisieren (wird beim nächsten Level-Start angewendet)
+});
+shop.init();
+
 // Dev Mode initialisieren
-initDevMode(game, resetLocalStorage);
+initDevMode(game, resetLocalStorage, upgradeSystem);
 
 requestAnimationFrame(gameLoop);
 requestAnimationFrame(titleStarfieldLoop);

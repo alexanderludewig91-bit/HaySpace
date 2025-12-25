@@ -49,7 +49,7 @@ function drawLifeIcon(ctx, x, y, scale = 0.25) {
   ctx.restore();
 }
 
-export function drawScoreOverlay(ctx, game) {
+export function drawScoreOverlay(ctx, game, upgradeSystem = null) {
   const padX = 20;
   const padY = 20;
 
@@ -57,10 +57,11 @@ export function drawScoreOverlay(ctx, game) {
   ctx.textAlign = 'right';
   ctx.textBaseline = 'top';
 
-  // Score
-  ctx.fillStyle = 'rgba(245,250,255,.92)';
+  // Credits (statt Score)
+  const credits = upgradeSystem ? upgradeSystem.getCredits() : game.score;
+  ctx.fillStyle = 'rgba(100,255,200,0.9)';
   ctx.font = '600 18px ui-sans-serif, system-ui';
-  ctx.fillText(String(game.score), W - padX, padY);
+  ctx.fillText(`Credits: ${credits.toLocaleString()}`, W - padX, padY);
 
   // Wave (unauffälliger)
   ctx.fillStyle = 'rgba(245,250,255,.62)';

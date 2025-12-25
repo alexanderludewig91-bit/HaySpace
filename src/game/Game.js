@@ -8,7 +8,8 @@ const W = CANVAS_WIDTH;
 const H = CANVAS_HEIGHT;
 
 export class Game {
-  constructor() {
+  constructor(upgradeSystem = null) {
+    this.upgradeSystem = upgradeSystem; // UpgradeSystem wird von außen übergeben
     this.hardMode = false;
     this.shake = 0;
     this.hitstop = 0;
@@ -51,6 +52,88 @@ export class Game {
 
     this.boss = null;
     this.bossDefeated = false; // Flag für besiegten Boss
+    
+    // Upgrade-bezogene Properties
+    this.dashEnabled = true; // Standardmäßig aktiviert (wird von Upgrades überschrieben)
+    this.overheatReduction = 0; // Reduktion des Heat-Costs (0-0.5)
+  }
+  
+  /**
+   * Setzt das UpgradeSystem (wird von main.js aufgerufen)
+   */
+  setUpgradeSystem(upgradeSystem) {
+    this.upgradeSystem = upgradeSystem;
+  }
+  
+  /**
+   * Wendet Upgrades vom UpgradeSystem an
+   */
+  applyUpgrades() {
+    console.log('=== applyUpgrades() aufgerufen ===');
+    console.log('UpgradeSystem vorhanden?', !!this.upgradeSystem);
+    
+    if (!this.upgradeSystem) {
+      console.error('❌ UpgradeSystem nicht verfügbar!');
+      return;
+    }
+    
+    console.log('🔍 Vor getGameValues() - this.upgradeSystem.upgrades:', this.upgradeSystem.upgrades);
+    const upgradeValues = this.upgradeSystem.getGameValues();
+    console.log('📊 Upgrade-Werte (nach getGameValues):', upgradeValues);
+    console.log('📊 Upgrade-Stufen:', this.upgradeSystem.upgrades);
+    console.log('📊 Upgrade-Stufen (roh):', JSON.stringify(this.upgradeSystem.upgrades));
+    console.log('📊 Credits:', this.upgradeSystem.credits);
+    
+    // Debug: Prüfe ob upgradeValues korrekt ist
+    if (!upgradeValues) {
+      console.error('❌ upgradeValues ist null/undefined!');
+      return;
+    }
+    
+    // Waffen-Level anwenden
+    const oldWeaponLevel = this.player.weaponLevel;
+    console.log(`🔫 Vor Anwendung - oldWeaponLevel: ${oldWeaponLevel}, upgradeValues.weaponLevel: ${upgradeValues.weaponLevel}`);
+    this.player.weaponLevel = upgradeValues.weaponLevel || 1;
+    console.log(`🔫 Waffen-Level: ${oldWeaponLevel} → ${this.player.weaponLevel}`);
+    console.log(`🔫 Nach Anwendung - this.player.weaponLevel: ${this.player.weaponLevel}`);
+    
+    // Speed Boost anwenden (permanent)
+    const oldSpeedBoost = this.player.speedBoost;
+    console.log(`⚡ Vor Anwendung - oldSpeedBoost: ${oldSpeedBoost}, upgradeValues.speedBoost: ${upgradeValues.speedBoost}`);
+    this.player.speedBoost = upgradeValues.speedBoost || 1.0;
+    console.log(`⚡ Speed Boost: ${oldSpeedBoost} → ${this.player.speedBoost}`);
+    console.log(`⚡ Nach Anwendung - this.player.speedBoost: ${this.player.speedBoost}`);
+    
+    // Shield Max anwenden
+    const oldShieldMax = this.player.shieldMax;
+    this.player.shieldMax = upgradeValues.shieldMax || 100;
+    // Shield proportional anpassen
+    if (oldShieldMax > 0) {
+      const shieldRatio = this.player.shield / oldShieldMax;
+      this.player.shield = this.player.shieldMax * shieldRatio;
+    } else {
+      this.player.shield = this.player.shieldMax;
+    }
+    console.log(`🛡️ Shield Max: ${oldShieldMax} → ${this.player.shieldMax}`);
+    console.log(`🛡️ Shield aktuell: ${this.player.shield}`);
+    
+    // Dash-Enabled wird in update() geprüft
+    const oldDashEnabled = this.dashEnabled;
+    this.dashEnabled = upgradeValues.dashEnabled !== false;
+    console.log(`💨 Dash: ${oldDashEnabled} → ${this.dashEnabled}`);
+    
+    // Overheat-Reduktion wird in shoot() angewendet
+    const oldOverheatReduction = this.overheatReduction;
+    this.overheatReduction = upgradeValues.overheatReduction || 0;
+    console.log(`❄️ Overheat-Reduktion: ${oldOverheatReduction} → ${this.overheatReduction}`);
+    
+    console.log('✅ applyUpgrades() abgeschlossen');
+    console.log('=== Finale Player-Werte ===');
+    console.log('  weaponLevel:', this.player.weaponLevel);
+    console.log('  speedBoost:', this.player.speedBoost);
+    console.log('  shieldMax:', this.player.shieldMax);
+    console.log('  dashEnabled:', this.dashEnabled);
+    console.log('  overheatReduction:', this.overheatReduction);
   }
 
   getUnlockedLevels() {
@@ -72,6 +155,37 @@ export class Game {
   setLevel(level) {
     this.currentLevel = level;
   }
+  
+  /**
+   * Wendet Upgrades vom UpgradeSystem an
+   * @param {Object} upgradeValues - Werte vom UpgradeSystem.getGameValues()
+   */
+  applyUpgrades(upgradeValues) {
+    if (!upgradeValues) return;
+    
+    // Waffen-Level anwenden
+    this.player.weaponLevel = upgradeValues.weaponLevel || 1;
+    
+    // Speed Boost anwenden (permanent)
+    this.player.speedBoost = upgradeValues.speedBoost || 1.0;
+    
+    // Shield Max anwenden
+    const oldShieldMax = this.player.shieldMax;
+    this.player.shieldMax = upgradeValues.shieldMax || 100;
+    // Shield proportional anpassen
+    if (oldShieldMax > 0) {
+      const shieldRatio = this.player.shield / oldShieldMax;
+      this.player.shield = this.player.shieldMax * shieldRatio;
+    } else {
+      this.player.shield = this.player.shieldMax;
+    }
+    
+    // Dash-Enabled wird in update() geprüft
+    this.dashEnabled = upgradeValues.dashEnabled !== false;
+    
+    // Overheat-Reduktion wird in shoot() angewendet
+    this.overheatReduction = upgradeValues.overheatReduction || 0;
+  }
 
   addPopup(text, x, y, life=0.75, kind='normal'){
     this.popups.push({text, x, y, vy: -48, life, max: life, kind});
@@ -86,11 +200,11 @@ export class Game {
     this.boss = null;
     this.bossDefeated = false;
     
-    // Player zurücksetzen
-    this.player.shield = this.player.shieldMax;
-    this.player.lives = 3;
-    this.player.weaponLevel = 1;
-    this.player.speedBoost = 1.0;
+    // WICHTIG: Upgrades ZUERST anwenden, bevor Player-Werte gesetzt werden
+    // (applyUpgrades() wird nach resetAll() aufgerufen, aber wir müssen hier
+    // sicherstellen, dass die Basis-Werte korrekt sind)
+    
+    // Player zurücksetzen (Basis-Werte, werden dann von applyUpgrades() überschrieben)
     this.player.x = W*0.5;
     this.player.y = H*0.78;
     this.player.vx = 0;
@@ -99,17 +213,13 @@ export class Game {
     this.player.heat = 0;
     this.player.fireCD = 0;
     this.player.dashCD = 0;
-
-    this.player.x = W*0.5; this.player.y = H*0.78;
-    this.player.vx = 0; this.player.vy = 0;
-    this.player.shield = this.player.shieldMax;
     this.player.lives = 3;
-    this.player.fireCD = 0;
-    this.player.heat = 0;
-    this.player.dashCD = 0;
-    this.player.inv = 0;
+    
+    // Standard-Werte (werden von applyUpgrades() überschrieben, wenn Upgrades vorhanden)
     this.player.weaponLevel = 1;
     this.player.speedBoost = 1.0;
+    this.player.shieldMax = 100;
+    this.player.shield = 100;
 
     this.overheatLocked = false;
     this.shake = 0; this.hitstop = 0;
@@ -336,13 +446,10 @@ export class Game {
   }
 
   dropPickup(x,y){
+    // Nur noch Shield-Pickups (Speed und Upgrade wurden durch Shop ersetzt)
     const r = Math.random();
-    if (r < 0.12){
+    if (r < 0.15){
       this.pickups.push({x,y, vy: rand(55, 85), r: 12, kind: 'shield', t:0});
-    } else if (r < 0.20){
-      this.pickups.push({x,y, vy: rand(55, 85), r: 12, kind: 'speed', t:0});
-    } else if (r < 0.27){
-      this.pickups.push({x,y, vy: rand(55, 85), r: 12, kind: 'upgrade', t:0});
     }
   }
 
@@ -358,7 +465,11 @@ export class Game {
 
     this.player.fireCD = this.hardMode ? 0.11 : 0.09;
 
-    const heatCost = (this.hardMode ? 9 : 7) + (this.player.weaponLevel-1)*1.4;
+    let heatCost = (this.hardMode ? 9 : 7) + (this.player.weaponLevel-1)*1.4;
+    // Overheat Protection anwenden (reduziert Heat-Cost)
+    if (this.overheatReduction) {
+      heatCost = heatCost * (1 - this.overheatReduction);
+    }
     this.player.heat = clamp(this.player.heat + heatCost, 0, 110);
     if (this.player.heat >= 100) {
       this.overheatLocked = true;
@@ -527,11 +638,11 @@ export class Game {
       this.player.vy = (this.player.vy/spd)*maxV;
     }
 
-    // Dash: Keyboard oder Gamepad
+    // Dash: Keyboard oder Gamepad (nur wenn aktiviert)
     if (this.player.dashCD > 0) this.player.dashCD -= dt;
     const dashPressed = (keys.has('ShiftLeft') || keys.has('ShiftRight')) || 
                         (gamepadInput && gamepadInput.isDashing());
-    if (dashPressed && this.player.dashCD <= 0){
+    if (dashPressed && this.player.dashCD <= 0 && this.dashEnabled !== false){
       this.player.dashCD = this.hardMode ? 0.55 : 0.45;
       this.player.inv = Math.max(this.player.inv, 0.40);
       const dx = (ax!==0||ay!==0) ? ax : 0;
@@ -637,23 +748,7 @@ export class Game {
           sfx('shield');
           this.addPopup('+SHIELD', p.x, p.y-18, 0.75, 'good');
         }
-        if (p.kind === 'speed') {
-          this.player.speedBoost = clamp(this.player.speedBoost + 0.15, 1.0, 2.0);
-          sfx('upgrade');
-          this.addPopup('SPEED+', p.x, p.y-18, 0.75, 'cool');
-        }
-        if (p.kind === 'upgrade') {
-          const before = this.player.weaponLevel;
-          this.player.weaponLevel = clamp(this.player.weaponLevel + 1, 1, 5);
-          sfx('upgrade');
-          if (this.player.weaponLevel > before){
-            this.addExplosion(p.x, p.y, 1.05);
-            this.addPopup('WEAPON UP!', p.x, p.y-22, 0.95, 'upgrade');
-          } else {
-            this.addExplosion(p.x, p.y, 0.75);
-            this.addPopup('MAX', p.x, p.y-18, 0.75, 'muted');
-          }
-        }
+        // Speed und Upgrade Pickups wurden durch Shop ersetzt
 
         this.addExplosion(p.x, p.y, 0.7);
         this.pickups.splice(i,1);
@@ -667,6 +762,10 @@ export class Game {
       if (this.boss && Math.hypot(b.x-this.boss.x, b.y-this.boss.y) < b.r + this.boss.r){
         this.boss.hp -= b.dmg;
         this.score += 2;
+        // Credits hinzufügen (Score = Credits)
+        if (this.upgradeSystem) {
+          this.upgradeSystem.addCredits(2);
+        }
         this.addExplosion(b.x,b.y, 0.55);
         this.bullets.splice(i,1);
         hit = true;
@@ -693,6 +792,10 @@ export class Game {
           this.bullets.splice(i,1);
           if (e.hp <= 0){
             this.score += e.score;
+            // Credits hinzufügen (Score = Credits)
+            if (this.upgradeSystem) {
+              this.upgradeSystem.addCredits(e.score);
+            }
             this.addExplosion(e.x, e.y, e.kind==='tank'?1.35:1.05);
             this.dropPickup(e.x, e.y);
             this.enemies.splice(j,1);

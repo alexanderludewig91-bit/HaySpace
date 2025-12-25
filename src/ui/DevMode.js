@@ -1,11 +1,77 @@
 import { ensureAudio } from '../systems/AudioSystem.js';
 import { drawEnemy } from '../render/GameRenderer.js';
 
-export function initDevMode(game, resetLocalStorage) {
+export function initDevMode(game, resetLocalStorage, upgradeSystem = null) {
   // DOM Elements
   const devModeBtn = document.getElementById('devModeBtn');
   const devModePanel = document.getElementById('devModePanel');
   const devModeCloseBtn = document.getElementById('devModeCloseBtn');
+  const localStorageInfo = document.getElementById('localStorageInfo');
+  const localStorageContent = document.getElementById('localStorageContent');
+  
+  // Funktion zum Aktualisieren der LocalStorage-Anzeige
+  function updateLocalStorageDisplay() {
+    if (!localStorageContent) return;
+    
+    const data = {
+      unlockedLevels: localStorage.getItem('unlockedLevels'),
+      upgrades: localStorage.getItem('upgrades'),
+      musicVolume: localStorage.getItem('musicVolume'),
+      sfxVolume: localStorage.getItem('sfxVolume')
+    };
+    
+    let displayText = '';
+    
+    // Unlocked Levels
+    if (data.unlockedLevels) {
+      try {
+        const levels = JSON.parse(data.unlockedLevels);
+        displayText += `Levels: [${levels.join(', ')}]\n`;
+      } catch (e) {
+        displayText += `Levels: ${data.unlockedLevels}\n`;
+      }
+    } else {
+      displayText += `Levels: [1]\n`;
+    }
+    
+    // Upgrades
+    if (data.upgrades) {
+      try {
+        const upgrades = JSON.parse(data.upgrades);
+        displayText += `\nUpgrades:\n`;
+        displayText += `  Weapon: ${upgrades.upgrades?.weapon || 0}\n`;
+        displayText += `  Overheat: ${upgrades.upgrades?.overheat || 0}\n`;
+        displayText += `  Speed: ${upgrades.upgrades?.speed || 0}\n`;
+        displayText += `  Dash: ${upgrades.upgrades?.dash || 0}\n`;
+        displayText += `  Shield: ${upgrades.upgrades?.shield || 0}\n`;
+        displayText += `  Credits: ${upgrades.credits || 0}\n`;
+      } catch (e) {
+        displayText += `\nUpgrades: ${data.upgrades}\n`;
+      }
+    } else {
+      displayText += `\nUpgrades: none\n`;
+      displayText += `Credits: 0\n`;
+    }
+    
+    // Settings
+    if (data.musicVolume) {
+      displayText += `\nMusic: ${Math.round(parseFloat(data.musicVolume) * 100)}%\n`;
+    }
+    if (data.sfxVolume) {
+      displayText += `SFX: ${Math.round(parseFloat(data.sfxVolume) * 100)}%\n`;
+    }
+    
+    localStorageContent.textContent = displayText;
+  }
+  
+  // Initial anzeigen
+  updateLocalStorageDisplay();
+  
+  // Regelmäßig aktualisieren (alle 500ms)
+  setInterval(updateLocalStorageDisplay, 500);
+  
+  // Auch bei Storage-Events aktualisieren
+  window.addEventListener('storage', updateLocalStorageDisplay);
   const devUnlockLevel1 = document.getElementById('devUnlockLevel1');
   const devUnlockLevel2 = document.getElementById('devUnlockLevel2');
   const devUnlockLevel3 = document.getElementById('devUnlockLevel3');
@@ -14,6 +80,7 @@ export function initDevMode(game, resetLocalStorage) {
   const devUnlockAll = document.getElementById('devUnlockAll');
   const devClearSave = document.getElementById('devClearSave');
   const devShowSave = document.getElementById('devShowSave');
+  const devAddCredits = document.getElementById('devAddCredits');
   const devSaveInfo = document.getElementById('devSaveInfo');
   const devSaveContent = document.getElementById('devSaveContent');
   const devEnemyTableBody = document.getElementById('devEnemyTableBody');
@@ -109,6 +176,18 @@ export function initDevMode(game, resetLocalStorage) {
     } else {
       devSaveContent.textContent = 'No save data';
       devSaveInfo.style.display = 'block';
+    }
+  });
+
+  // Add Credits Button
+  devAddCredits.addEventListener('click', () => {
+    if (upgradeSystem) {
+      upgradeSystem.addCredits(10000);
+      alert('10.000 Credits hinzugefügt!');
+      // LocalStorage-Anzeige aktualisieren
+      updateLocalStorageDisplay();
+    } else {
+      alert('UpgradeSystem nicht verfügbar!');
     }
   });
 
