@@ -65,23 +65,33 @@ src/
 │                           # - drawRoundedRect() - Abgerundete Rechtecke
 │
 ├── ui/
-│   ├── HUD.js             # HUD-Rendering (262 Zeilen)
-│   │                       # - Score, Wave, Lives, Weapon-Anzeige
+│   ├── HUD.js             # HUD-Rendering (263 Zeilen)
+│   │                       # - Credits-Anzeige (statt Score)
+│   │                       # - Wave, Lives, Weapon-Anzeige
 │   │                       # - Shield- und Heat-Bars
 │   │                       # - Speed-Boost-Bar
 │   │                       # - Boss-Health-Bar (wenn aktiv)
 │   │                       # - Overheat-Warnung
-│   │                       # - Score/Wave-Overlay oben rechts
+│   │                       # - Credits/Wave-Overlay oben rechts
 │   │
-│   ├── GamepadMenuNavigation.js  # Gamepad-Menü-Navigation (227 Zeilen)
+│   ├── GamepadMenuNavigation.js  # Gamepad-Menü-Navigation (228 Zeilen)
 │   │                              # - Automatische Button-Erkennung
 │   │                              # - Menü-Navigation mit D-Pad/Stick
 │   │                              # - Back-Button-Handling
+│   │                              # - Unterstützung für Shop/Werft-Menü
 │   │
-│   └── DevMode.js         # Dev Mode Panel (199 Zeilen)
+│   ├── Shop.js            # Shop-UI (279 Zeilen)
+│   │                       # - Upgrade-Shop/Werft-Interface
+│   │                       # - Grafische Darstellung der Upgrades
+│   │                       # - Kauf-Logik und Preis-Anzeige
+│   │                       # - Credits-Anzeige
+│   │
+│   └── DevMode.js         # Dev Mode Panel (280+ Zeilen)
 │                           # - Level-Unlock-Funktionen
 │                           # - Save-Game-Management
 │                           # - Enemy-Übersicht
+│                           # - LocalStorage-Anzeige (statisch)
+│                           # - Add 10k Credits Button
 │
 ├── systems/
 │   ├── AudioSystem.js     # Audio-System (184 Zeilen)
@@ -100,6 +110,13 @@ src/
 │   │                       # - Dash (B Button / Left Trigger)
 │   │                       # - Pause (Start Button)
 │   │                       # - Menü-Navigation (D-Pad / Left Stick)
+│   │
+│   ├── UpgradeSystem.js   # Upgrade-System (201 Zeilen)
+│   │                       # - Permanent Upgrades (Waffe, Overheat, Speed, Dash, Shield)
+│   │                       # - Credits-System (Score = Credits, kumulativ)
+│   │                       # - LocalStorage für Upgrades und Credits
+│   │                       # - Upgrade-Preise und Stufen-Management
+│   │                       # - getGameValues() - Berechnet Spiel-Werte aus Upgrades
 │   │
 │   └── InputSystem.js     # Input-System (für zukünftige Erweiterungen)
 │                           # - Keyboard-Input-Handling
@@ -197,8 +214,19 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
 
 ### Pickup-System
 - **Shield**: Stellt Schild wieder her
-- **Speed**: Erhöht Geschwindigkeit (+0.15, max 2.0x)
-- **Upgrade**: Erhöht Waffen-Level (max Level 5)
+- **Speed/Upgrade Pickups**: Entfernt (ersetzt durch permanent Shop-Upgrades)
+
+### Upgrade-Shop-System
+- **Permanent Upgrades**: Werden im Shop gekauft und bleiben erhalten
+- **Upgrade-Typen**:
+  - **Waffe**: 2 Stufen (1→2→3 Schüsse gleichzeitig)
+  - **Overheat Protection**: 3 Stufen (15%, 30%, 50% langsamer)
+  - **Speed Boost**: 5 Stufen (+0.2, +0.4, +0.6, +0.8, +1.0 auf Basis 1.0)
+  - **Dash System**: 1 Stufe (aktiviert/deaktiviert)
+  - **Shield**: 5 Stufen (+20%, +40%, +60%, +80%, +100%)
+- **Credits-System**: Score = Credits, kumulativ, verfallen nicht bei Tod
+- **Speicherung**: Upgrades und Credits im LocalStorage
+- **Menü-Struktur**: Seite 3 (Game Menu: Level-Auswahl/Werft), Seite 4 (Level-Auswahl)
 
 ## Erweiterungsmöglichkeiten
 
@@ -292,6 +320,17 @@ Das Spiel besteht aus **5 Leveln**, die nacheinander freigeschaltet werden:
 - ✅ Settings-Menü integriert in Hauptmenü-Karte
 - ✅ Konsistente Menü-Navigation
 - ✅ Musik-Steuerung über UI
+- ✅ Upgrade-Shop/Werft-Interface
+- ✅ Credits-Anzeige (statt Score)
+- ✅ Neue Menü-Struktur (Game Menu, Shop, Level-Auswahl)
+
+#### Upgrade-System
+- ✅ Permanent Upgrade-Shop
+- ✅ 5 Upgrade-Typen mit mehreren Stufen
+- ✅ Credits-System (Score = Credits, kumulativ)
+- ✅ LocalStorage für Upgrades und Credits
+- ✅ Upgrades werden beim Level-Start angewendet
+- ✅ Pickups entfernt (nur Shield bleibt)
 
 ### Geplante Features
 - Couch Co-op für 2-4 Spieler
@@ -460,12 +499,24 @@ node scripts/fix-base-path.js
    - Back to Title Button
    - Alle in einer Karte (`mainMenuCard`)
 
-3. **Level-Auswahl** (`levelSelectContent`)
-   - Wird in der gleichen Karte wie Hauptmenü angezeigt
-   - Dynamische Level-Buttons (gesperrt/freigeschaltet)
+3. **Game Menu** (`gameMenuContent`) - Seite 3
+   - Level Select Button (führt zu Seite 4)
+   - Werft Button (Shop für Upgrades)
    - Back Button
 
-4. **Settings-Menü** (`settingsContent`)
+4. **Level-Auswahl** (`levelSelectContent`) - Seite 4
+   - Wird in der gleichen Karte wie Hauptmenü angezeigt
+   - Dynamische Level-Buttons (gesperrt/freigeschaltet)
+   - Back Button (zurück zu Game Menu)
+
+5. **Shop/Werft** (`shopContent`)
+   - Upgrade-Shop-Interface
+   - Grafische Darstellung aller Upgrades
+   - Aktuelle Stufe, nächste Stufe, Preis
+   - Credits-Anzeige
+   - Back Button (zurück zu Game Menu)
+
+6. **Settings-Menü** (`settingsContent`)
    - Wird in der gleichen Karte wie Hauptmenü angezeigt
    - Musik-Lautstärke-Slider (0-100%)
    - Soundeffekte-Lautstärke-Slider (0-100%)
@@ -506,6 +557,8 @@ node scripts/fix-base-path.js
   - `unlockedLevels`: Array der freigeschalteten Level
   - `musicVolume`: Musik-Lautstärke (0-1)
   - `sfxVolume`: Soundeffekte-Lautstärke (0-1)
+  - `upgrades`: Upgrade-Daten (Upgrade-Stufen und Credits)
+    - Format: `{upgrades: {weapon, overheat, speed, dash, shield}, credits: number}`
 
 ## Entwicklung
 
@@ -526,11 +579,13 @@ npm run preview  # Teste Production-Build lokal
 - **Zu groß**: >1000 Zeilen → sollte aufgeteilt werden
 
 Aktuelle Dateigrößen:
-- `main.js`: 1133 Zeilen ⚠️ (erweitert durch UI-Management)
-- `Game.js`: 798 Zeilen ✅
+- `main.js`: 1307 Zeilen ⚠️ (erweitert durch UI-Management und Upgrade-System)
+- `Game.js`: 901 Zeilen ✅
 - `GameRenderer.js`: 450+ Zeilen ✅
 - `GamepadSystem.js`: 313 Zeilen ✅
-- `GamepadMenuNavigation.js`: 227 Zeilen ✅
-- `HUD.js`: 262 Zeilen ✅
+- `GamepadMenuNavigation.js`: 228 Zeilen ✅
+- `Shop.js`: 279 Zeilen ✅
+- `UpgradeSystem.js`: 201 Zeilen ✅
+- `HUD.js`: 263 Zeilen ✅
 - `AudioSystem.js`: 184 Zeilen ✅
-- `DevMode.js`: 199 Zeilen ✅
+- `DevMode.js`: 280+ Zeilen ✅
