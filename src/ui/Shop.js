@@ -14,34 +14,34 @@ export class Shop {
     // Upgrade-Definitionen mit Symbolen (Unicode als Platzhalter)
     this.upgradeDefinitions = {
       weapon: {
-        name: 'Waffenupgrade',
+        name: 'Weapon Upgrade',
         icon: '⚔️',
-        description: 'Erhöht die Anzahl gleichzeitiger Schüsse',
+        description: 'Increases number of simultaneous shots',
         maxLevel: 2,
         getLevelDescription: (level) => {
-          if (level === 0) return '1 Schuss';
-          if (level === 1) return '2 Schüsse';
-          if (level === 2) return '3 Schüsse';
+          if (level === 0) return '1 shot';
+          if (level === 1) return '2 shots';
+          if (level === 2) return '3 shots';
           return 'MAX';
         }
       },
       overheat: {
         name: 'Overheat Protection',
         icon: '❄️',
-        description: 'Waffe überhitzt langsamer',
+        description: 'Weapon overheats slower',
         maxLevel: 3,
         getLevelDescription: (level) => {
           if (level === 0) return 'Normal';
-          if (level === 1) return '15% langsamer';
-          if (level === 2) return '30% langsamer';
-          if (level === 3) return '50% langsamer';
+          if (level === 1) return '15% slower';
+          if (level === 2) return '30% slower';
+          if (level === 3) return '50% slower';
           return 'MAX';
         }
       },
       speed: {
         name: 'Speed Boost',
         icon: '⚡',
-        description: 'Erhöht Beschleunigung und Maximalgeschwindigkeit',
+        description: 'Increases acceleration and max speed',
         maxLevel: 5,
         getLevelDescription: (level) => {
           if (level === 0) return '1.0x';
@@ -52,16 +52,16 @@ export class Shop {
       dash: {
         name: 'Dash System',
         icon: '💨',
-        description: 'Schneller Bewegungsimpuls',
+        description: 'Quick movement burst',
         maxLevel: 1,
         getLevelDescription: (level) => {
-          return level === 0 ? 'Deaktiviert' : 'Aktiviert';
+          return level === 0 ? 'Disabled' : 'Enabled';
         }
       },
       shield: {
-        name: 'Schild',
+        name: 'Shield',
         icon: '🛡️',
-        description: 'Erhöht maximale Schildkapazität',
+        description: 'Increases maximum shield capacity',
         maxLevel: 5,
         getLevelDescription: (level) => {
           if (level === 0) return '100%';
@@ -150,11 +150,11 @@ export class Shop {
     levelInfo.style.cssText = 'display: flex; justify-content: space-between; align-items: center; font-size: 14px;';
     levelInfo.innerHTML = `
       <span style="color: rgba(245,250,255,0.7);">
-        Aktuell: <strong style="color: rgba(100,255,200,1);">${definition.getLevelDescription(currentLevel)}</strong>
+        Current: <strong style="color: rgba(100,255,200,1);">${definition.getLevelDescription(currentLevel)}</strong>
       </span>
       ${canUpgrade ? `
         <span style="color: rgba(245,250,255,0.7);">
-          Nächste: <strong style="color: rgba(255,200,100,1);">${definition.getLevelDescription(nextLevel)}</strong>
+          Next: <strong style="color: rgba(255,200,100,1);">${definition.getLevelDescription(nextLevel)}</strong>
         </span>
       ` : '<span style="color: rgba(150,150,150,1);">MAX</span>'}
     `;
@@ -172,7 +172,7 @@ export class Shop {
       
       const buyButton = document.createElement('button');
       buyButton.className = 'btn';
-      buyButton.textContent = canAfford ? 'Kaufen' : 'Nicht genug Credits';
+      buyButton.textContent = canAfford ? 'Buy' : 'Not enough credits';
       buyButton.disabled = !canAfford;
       buyButton.style.cssText = canAfford ? '' : 'opacity: 0.5; cursor: not-allowed;';
       buyButton.addEventListener('click', () => {
@@ -189,7 +189,7 @@ export class Shop {
     } else {
       const maxLabel = document.createElement('div');
       maxLabel.style.cssText = 'text-align: center; color: rgba(150,150,150,1); font-size: 14px; margin-top: 8px;';
-      maxLabel.textContent = 'Maximales Upgrade erreicht';
+      maxLabel.textContent = 'Maximum upgrade reached';
       container.appendChild(maxLabel);
     }
     

@@ -80,6 +80,7 @@ export function initDevMode(game, resetLocalStorage, upgradeSystem = null) {
   const devUnlockAll = document.getElementById('devUnlockAll');
   const devClearSave = document.getElementById('devClearSave');
   const devShowSave = document.getElementById('devShowSave');
+  const devToggleLocalStorageMenu = document.getElementById('devToggleLocalStorageMenu');
   const devAddCredits = document.getElementById('devAddCredits');
   const devSaveInfo = document.getElementById('devSaveInfo');
   const devSaveContent = document.getElementById('devSaveContent');
@@ -169,13 +170,43 @@ export function initDevMode(game, resetLocalStorage, upgradeSystem = null) {
   });
 
   devShowSave.addEventListener('click', () => {
-    const save = localStorage.getItem('unlockedLevels');
-    if (save) {
-      devSaveContent.textContent = JSON.stringify(JSON.parse(save), null, 2);
+    // Alle LocalStorage-Einträge sammeln
+    const allData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const value = localStorage.getItem(key);
+        try {
+          // Versuche JSON zu parsen, falls es JSON ist
+          allData[key] = JSON.parse(value);
+        } catch (e) {
+          // Falls kein JSON, speichere als String
+          allData[key] = value;
+        }
+      }
+    }
+    
+    if (Object.keys(allData).length > 0) {
+      devSaveContent.textContent = JSON.stringify(allData, null, 2);
       devSaveInfo.style.display = 'block';
     } else {
-      devSaveContent.textContent = 'No save data';
+      devSaveContent.textContent = 'No LocalStorage data found';
       devSaveInfo.style.display = 'block';
+    }
+  });
+
+  // Toggle LocalStorage Menu Button
+  devToggleLocalStorageMenu.addEventListener('click', () => {
+    ensureAudio();
+    if (localStorageInfo) {
+      const isHidden = localStorageInfo.style.display === 'none';
+      if (isHidden) {
+        localStorageInfo.style.display = 'block';
+        devToggleLocalStorageMenu.textContent = 'Hide LocalStorage Menu';
+      } else {
+        localStorageInfo.style.display = 'none';
+        devToggleLocalStorageMenu.textContent = 'Show LocalStorage Menu';
+      }
     }
   });
 

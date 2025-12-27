@@ -27,28 +27,38 @@ Das Projekt ist modular aufgebaut, um Wartbarkeit und Skalierbarkeit zu gewährl
 
 ```
 src/
-├── main.js                 # Einstiegspunkt (1133 Zeilen)
+├── main.js                 # Einstiegspunkt (~725 Zeilen)
 │                           # - Canvas-Initialisierung
 │                           # - Input-Handling (Keyboard + Gamepad)
-│                           # - Game-Loop mit Fixed Timestep
-│                           # - UI-Management (Titelbildschirm, Menüs, Settings)
-│                           # - Levelauswahl-UI
-│                           # - Settings-Menü-Integration
-│                           # - Musik-Steuerung (Start/Stop)
-│                           # - Koordiniert Game, Renderer und HUD
+│                           # - Button-Event-Listener
+│                           # - Initialisierung aller Module
+│                           # - Koordiniert alle Systeme
 │
 ├── game/
-│   └── Game.js            # Game-Logik (723 Zeilen)
-│                           # - Game-State-Management
-│                           # - Player-Physik und Bewegung
-│                           # - Enemy-Spawning und AI
-│                           # - Collision-Detection
-│                           # - Bullet-System
-│                           # - Pickup-System
-│                           # - Boss-Logik (Level-abhängige Stats & Design)
-│                           # - Particle-System
-│                           # - Score und Wave-Management
-│                           # - Level-abhängige Wellen-Anzahl
+│   ├── Game.js            # Game-Logik (901 Zeilen)
+│   │                       # - Game-State-Management
+│   │                       # - Player-Physik und Bewegung
+│   │                       # - Enemy-Spawning und AI
+│   │                       # - Collision-Detection
+│   │                       # - Bullet-System
+│   │                       # - Pickup-System
+│   │                       # - Boss-Logik (Level-abhängige Stats & Design)
+│   │                       # - Particle-System
+│   │                       # - Score und Wave-Management
+│   │                       # - Level-abhängige Wellen-Anzahl
+│   │                       # - Upgrade-Integration
+│   │
+│   ├── GameLoop.js        # Game-Loop (216 Zeilen)
+│   │                       # - Fixed Timestep-Logik
+│   │                       # - Gamepad-Input-Handling im Loop
+│   │                       # - Level-Complete-Delay-Logik
+│   │                       # - Rendering-Pipeline
+│   │                       # - Title Starfield-Update
+│   │
+│   └── LevelManager.js    # Level-Manager (89 Zeilen)
+│                           # - Level-Start-Logik
+│                           # - Upgrade-Anwendung
+│                           # - Level-Initialisierung
 │
 ├── render/
 │   └── GameRenderer.js    # Rendering-Funktionen (450+ Zeilen)
@@ -74,7 +84,42 @@ src/
 │   │                       # - Overheat-Warnung
 │   │                       # - Credits/Wave-Overlay oben rechts
 │   │
-│   ├── GamepadMenuNavigation.js  # Gamepad-Menü-Navigation (228 Zeilen)
+│   ├── DOMReferences.js   # DOM-Referenzen (135 Zeilen)
+│   │                       # - Zentrale DOM-Element-Selektion
+│   │                       # - Initialisierung aller Referenzen
+│   │                       # - Export als DOM-Objekt
+│   │
+│   ├── ScreenManager.js   # Screen-Manager (152 Zeilen)
+│   │                       # - showScreen() Funktion
+│   │                       # - Screen-State-Management
+│   │                       # - Übergänge zwischen Screens
+│   │
+│   ├── MenuManager.js     # Menü-Manager (218 Zeilen)
+│   │                       # - showGameMenu() - Game Menu anzeigen
+│   │                       # - showShop() - Shop anzeigen
+│   │                       # - transitionToLevelSelect() - Level-Auswahl
+│   │                       # - showPauseMenu() / hidePauseMenu()
+│   │                       # - restart() - Spiel neu starten
+│   │
+│   ├── MenuAnimations.js  # Menü-Animationen (178 Zeilen)
+│   │                       # - animateButtonsExit() - Buttons ausblenden
+│   │                       # - animateButtonsEnter() - Buttons einblenden
+│   │                       # - animateContentEnter() - Content einblenden
+│   │                       # - animateContentExit() - Content ausblenden
+│   │                       # - animateMenuTransition() - Kombinierte Übergänge
+│   │
+│   ├── LevelSelectRenderer.js  # Level-Select-Renderer (74 Zeilen)
+│   │                            # - renderLevelSelect() - Level-Buttons rendern
+│   │                            # - Animation-Logik für Buttons
+│   │                            # - Gesperrte/Freigeschaltete Level
+│   │
+│   ├── TitleStarfield.js  # Title Starfield (115 Zeilen)
+│   │                       # - Starfield für Titelbildschirm
+│   │                       # - Update- und Render-Logik
+│   │                       # - Sichtbarkeits-Management
+│   │                       # - Canvas-Resize-Handling
+│   │
+│   ├── GamepadMenuNavigation.js  # Gamepad-Menü-Navigation (243 Zeilen)
 │   │                              # - Automatische Button-Erkennung
 │   │                              # - Menü-Navigation mit D-Pad/Stick
 │   │                              # - Back-Button-Handling
@@ -132,10 +177,16 @@ src/
 │                           # - Langsame Parallax-Bewegung
 │
 ├── utils/
-│   └── math.js            # Math-Utilities
-│                           # - clamp() - Werte begrenzen
-│                           # - rand() - Zufallszahlen
-│                           # - lerp() - Lineare Interpolation
+│   ├── math.js            # Math-Utilities
+│   │                       # - clamp() - Werte begrenzen
+│   │                       # - rand() - Zufallszahlen
+│   │                       # - lerp() - Lineare Interpolation
+│   │
+│   └── LocalStorageManager.js  # LocalStorage-Manager (67 Zeilen)
+│                                # - resetLocalStorage() - Alle Daten zurücksetzen
+│                                # - loadFromLocalStorage() - Spielstand laden
+│                                # - saveToLocalStorage() - Spielstand speichern
+│                                # - loadSettings() - Einstellungen laden
 │
 ├── config.js              # Konfiguration
 │                           # - CANVAS_WIDTH, CANVAS_HEIGHT
@@ -175,10 +226,17 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
 
 ### Module-Kommunikation
 
-- **main.js** → erstellt `Game`-Instanz, koordiniert Update und Render
+- **main.js** → Einstiegspunkt, initialisiert alle Module, koordiniert Event-Listener
 - **Game.js** → enthält alle Game-Logik, gibt State an Renderer weiter
+- **GameLoop.js** → Hauptspielschleife mit Fixed Timestep, koordiniert Update und Render
+- **LevelManager.js** → Level-Start und Upgrade-Anwendung
 - **GameRenderer.js** → rendert alle visuellen Elemente basierend auf Game-State
 - **HUD.js** → rendert UI-Overlay basierend auf Game-State
+- **ScreenManager.js** → verwaltet Screen-Übergänge
+- **MenuManager.js** → Menü-Funktionen (Game Menu, Shop, etc.)
+- **MenuAnimations.js** → wiederverwendbare Animation-Logik
+- **DOMReferences.js** → zentrale DOM-Referenzen
+- **LocalStorageManager.js** → LocalStorage-Operationen
 
 ## Wichtige Konzepte
 
@@ -578,12 +636,21 @@ npm run preview  # Teste Production-Build lokal
 - **Akzeptabel**: 500-800 Zeilen
 - **Zu groß**: >1000 Zeilen → sollte aufgeteilt werden
 
-Aktuelle Dateigrößen:
-- `main.js`: 1307 Zeilen ⚠️ (erweitert durch UI-Management und Upgrade-System)
+Aktuelle Dateigrößen (nach Refaktorierung):
+- `main.js`: ~725 Zeilen ✅ (reduziert von 1593 Zeilen)
 - `Game.js`: 901 Zeilen ✅
 - `GameRenderer.js`: 450+ Zeilen ✅
+- `GameLoop.js`: 216 Zeilen ✅
+- `LevelManager.js`: 89 Zeilen ✅
+- `MenuManager.js`: 218 Zeilen ✅
+- `MenuAnimations.js`: 178 Zeilen ✅
+- `ScreenManager.js`: 152 Zeilen ✅
+- `TitleStarfield.js`: 115 Zeilen ✅
+- `DOMReferences.js`: 135 Zeilen ✅
+- `LevelSelectRenderer.js`: 74 Zeilen ✅
+- `LocalStorageManager.js`: 67 Zeilen ✅
 - `GamepadSystem.js`: 313 Zeilen ✅
-- `GamepadMenuNavigation.js`: 228 Zeilen ✅
+- `GamepadMenuNavigation.js`: 243 Zeilen ✅
 - `Shop.js`: 279 Zeilen ✅
 - `UpgradeSystem.js`: 201 Zeilen ✅
 - `HUD.js`: 263 Zeilen ✅
