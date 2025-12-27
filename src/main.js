@@ -20,7 +20,7 @@ import { resetLocalStorage, loadFromLocalStorage, loadSettings } from './utils/L
 
 // UI Components
 import { showScreen } from './ui/ScreenManager.js';
-import { showGameMenu, showShop, transitionToLevelSelect, showPauseMenu, hidePauseMenu, restart } from './ui/MenuManager.js';
+import { showGameMenu, showShop, transitionToLevelSelect, showPauseMenu, hidePauseMenu, restart, updateHangarLayoutWidth } from './ui/MenuManager.js';
 import { initTitleStarfield, setTitleStarfieldVisible, updateTitleStarfield } from './ui/TitleStarfield.js';
 import { renderLevelSelect } from './ui/LevelSelectRenderer.js';
 
@@ -67,7 +67,36 @@ const upgradeSystem = new UpgradeSystem();
 
 // Shop System
 const shop = new Shop(upgradeSystem, (upgradeType, level) => {
-  console.log(`Upgrade gekauft: ${upgradeType} Stufe ${level}`);
+  upgradeSystem.saveToLocalStorage();
+  console.log(`Upgrade gekauft: ${upgradeType} Level ${level}`);
+}, () => {
+  // Back-Button Handler
+  ensureAudio();
+  const shopContent = document.getElementById('shopContent');
+  if (shopContent) {
+    shopContent.classList.add('start-journey-exit');
+    setTimeout(() => {
+      shopContent.style.display = 'none';
+      shopContent.classList.remove('start-journey-exit');
+      
+      // max-width zurücksetzen
+      const hangarLayout = document.getElementById('hangarLayout');
+      if (hangarLayout) {
+        hangarLayout.style.maxWidth = '';
+      }
+      
+      // mainMenuCard wieder anzeigen
+      if (DOM.mainMenuCard) {
+        DOM.mainMenuCard.style.display = 'block';
+      }
+      
+      // Game Menu wieder anzeigen
+      showGameMenu(dependencies);
+    }, 300);
+  } else {
+    // Fallback: Direkt Game Menu anzeigen
+    showGameMenu(dependencies);
+  }
 });
 
 // Game instance
@@ -570,49 +599,7 @@ DOM.gameMenuBackBtn?.addEventListener('click', () => {
   }
 });
 
-// Shop Back Button
-DOM.shopBackBtn?.addEventListener('click', () => {
-  ensureAudio();
-  
-  if (DOM.shopContent) {
-    DOM.shopContent.classList.add('start-journey-exit');
-    setTimeout(() => {
-      DOM.shopContent.style.display = 'none';
-      DOM.shopContent.classList.remove('start-journey-exit');
-      
-      if (DOM.gameMenuContent) {
-        const gameMenuButtons = [DOM.levelSelectMenuBtn, DOM.shopBtn, DOM.gameMenuBackBtn].filter(Boolean);
-        gameMenuButtons.forEach((btn) => {
-          btn.style.opacity = '0';
-          btn.style.transform = 'scale(0.9) translateY(10px)';
-        });
-        
-        DOM.gameMenuContent.style.display = 'block';
-        
-        gameMenuButtons.forEach((btn, index) => {
-          setTimeout(() => {
-            btn.classList.add('level-button-enter');
-            if (index === 1) btn.classList.add('level-button-enter-delay-1');
-            if (index === 2) btn.classList.add('level-button-enter-delay-2');
-            
-            setTimeout(() => {
-              btn.classList.remove('level-button-enter', 'level-button-enter-delay-1', 'level-button-enter-delay-2');
-              btn.style.opacity = '';
-              btn.style.transform = '';
-            }, 500);
-          }, 200 + (index * 100));
-        });
-      }
-      
-      if (DOM.levelSelectContent) DOM.levelSelectContent.style.display = 'none';
-      if (DOM.settingsContent) DOM.settingsContent.style.display = 'none';
-      
-      setTimeout(() => {
-        setupGamepadNavigation('gameMenu');
-      }, 1000);
-    }, 300);
-  }
-});
+// Back-Button wird jetzt in Shop.js gehandhabt, kein separater Event-Listener mehr nötig
 
 // Confirm New Game Button
 DOM.confirmNewGameBtn?.addEventListener('click', () => {
@@ -727,6 +714,18 @@ initDevMode(game, () => {
   upgradeSystem.reset();
   game.unlockedLevels = [1];
 }, upgradeSystem);
+
+// Resize-Handler für Hangar-Layout (aktualisiert max-width bei Fenstergrößenänderung)
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    const shopContent = document.getElementById('shopContent');
+    if (shopContent && shopContent.style.display !== 'none') {
+      updateHangarLayoutWidth();
+    }
+  }, 150);
+});
 
 // Game Loop starten
 const gameLoop = initGameLoop(dependencies);

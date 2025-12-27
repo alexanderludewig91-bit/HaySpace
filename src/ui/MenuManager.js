@@ -8,11 +8,64 @@ import { renderLevelSelect } from './LevelSelectRenderer.js';
 import { showScreen } from './ScreenManager.js';
 
 /**
+ * Berechnet und setzt die maximale Breite des Hangar-Layouts basierend auf der tatsächlichen Bildgröße
+ */
+export function updateHangarLayoutWidth() {
+  const titleScreenBg = document.querySelector('.title-screen-bg');
+  const shopContent = document.getElementById('shopContent');
+  const hangarLayout = document.getElementById('hangarLayout');
+  
+  // Nur aktualisieren, wenn der Shop sichtbar ist
+  if (!shopContent || shopContent.style.display === 'none' || !hangarLayout || !titleScreenBg) {
+    return;
+  }
+  
+  const bgImage = window.getComputedStyle(titleScreenBg).backgroundImage;
+  if (!bgImage || !bgImage.includes('hangar.png')) {
+    return;
+  }
+  
+  const img = new Image();
+  img.onload = () => {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const imageAspectRatio = img.width / img.height; // 1536 / 1024 = 1.5
+    
+    // Berechne die tatsächliche gerenderte Breite mit contain
+    let renderedWidth;
+    if (viewportWidth / viewportHeight > imageAspectRatio) {
+      // Viewport ist breiter - Bild wird an der Höhe skaliert
+      renderedWidth = viewportHeight * imageAspectRatio;
+    } else {
+      // Viewport ist schmaler - Bild wird an der Breite skaliert
+      renderedWidth = viewportWidth;
+    }
+    
+    // Setze max-width auf den Grid-Container
+    hangarLayout.style.maxWidth = `${renderedWidth}px`;
+  };
+  img.src = '/hangar.png';
+}
+
+/**
  * Zeigt das Game Menu an
  * @param {Object} dependencies - Abhängigkeiten (DOM, setupGamepadNavigation)
  */
 export function showGameMenu(dependencies) {
   const { DOM, setupGamepadNavigation } = dependencies;
+  
+  // Hintergrundbild zurück zum Titelbild wechseln
+  const titleScreenBg = document.querySelector('.title-screen-bg');
+  if (titleScreenBg) {
+    titleScreenBg.style.backgroundImage = "url('/hayspace-cover.png')";
+    titleScreenBg.style.backgroundSize = 'contain'; // Zurück zu contain für Titelbild
+    titleScreenBg.style.backgroundPosition = 'center';
+  }
+  
+  // Starfield wieder einblenden (für Titelbildschirm)
+  if (DOM.titleStarfieldCanvas) {
+    DOM.titleStarfieldCanvas.style.opacity = '1';
+  }
   
   DOM.titleScreen?.classList.remove('hidden');
   DOM.mainMenuSection?.classList.remove('hidden');
@@ -110,11 +163,29 @@ export function showGameMenu(dependencies) {
 }
 
 /**
- * Zeigt den Shop an
+ * Zeigt den Shop/Hangar an
  * @param {Object} dependencies - Abhängigkeiten (DOM, shop, setupGamepadNavigation)
  */
 export function showShop(dependencies) {
   const { DOM, shop, setupGamepadNavigation } = dependencies;
+  
+  // Hintergrundbild zu Hangar wechseln
+  const titleScreenBg = document.querySelector('.title-screen-bg');
+  if (titleScreenBg) {
+    titleScreenBg.style.backgroundImage = "url('/hangar.png')";
+    titleScreenBg.style.backgroundSize = 'contain'; // Originalformat wie beim Titelbild
+    titleScreenBg.style.backgroundPosition = 'center';
+  }
+  
+  // Starfield ausblenden (nicht im Hangar)
+  if (DOM.titleStarfieldCanvas) {
+    DOM.titleStarfieldCanvas.style.opacity = '0';
+  }
+  
+  // Karte ausblenden (damit Hangar den vollen Bildschirm nutzen kann)
+  if (DOM.mainMenuCard) {
+    DOM.mainMenuCard.style.display = 'none';
+  }
   
   // Game Menu Buttons ausblenden mit Animation
   if (DOM.gameMenuContent) {
@@ -125,6 +196,21 @@ export function showShop(dependencies) {
       
       // Shop Content einblenden mit Animation
       if (DOM.shopContent) {
+        DOM.shopContent.style.display = 'block';
+        
+        // Maximale Breite des Grid-Containers basierend auf der tatsächlichen Bildgröße setzen
+        setTimeout(() => {
+          updateHangarLayoutWidth();
+        }, 100);
+        
+        // Kurze Verzögerung, damit DOM aktualisiert ist
+        requestAnimationFrame(() => {
+          // Shop rendern NACH dem Einblenden
+          if (shop) {
+            shop.render();
+          }
+        });
+        
         animateContentEnter(DOM.shopContent, {
           delay: 300,
           onComplete: () => {
@@ -134,14 +220,25 @@ export function showShop(dependencies) {
           }
         });
       }
-      
-      if (shop) {
-        shop.render();
-      }
     }, 300);
   } else {
     // Game Menu bereits versteckt
     if (DOM.shopContent) {
+      DOM.shopContent.style.display = 'block';
+      
+      // Maximale Breite des Grid-Containers basierend auf der tatsächlichen Bildgröße setzen
+      setTimeout(() => {
+        updateHangarLayoutWidth();
+      }, 100);
+      
+      // Kurze Verzögerung, damit DOM aktualisiert ist
+      requestAnimationFrame(() => {
+        // Shop rendern NACH dem Einblenden
+        if (shop) {
+          shop.render();
+        }
+      });
+      
       animateContentEnter(DOM.shopContent, {
         delay: 200,
         onComplete: () => {
@@ -150,10 +247,6 @@ export function showShop(dependencies) {
           }, 500);
         }
       });
-    }
-    
-    if (shop) {
-      shop.render();
     }
   }
 }

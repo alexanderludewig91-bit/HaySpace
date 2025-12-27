@@ -100,20 +100,33 @@
                 <button class="btn btn-large" id="gameMenuBackBtn" style="margin-top: 20px; width: 100%;">Back</button>
               </div>
             </div>
-            <!-- Shop/Werft Content -->
-            <div id="shopContent" style="display: none;">
-              <h1>HANGAR</h1>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <span style="font-size: 16px; color: rgba(245,250,255,0.9);">Credits:</span>
-                <span id="creditsDisplay" style="font-size: 18px; color: rgba(100,255,200,1); font-weight: bold;">0</span>
+          </div>
+        </div>
+        <!-- Shop/Hangar Content - AUSSERHALB der mainMenuCard für volle Bildschirmgröße -->
+        <div id="shopContent" style="display: none;">
+              <!-- Drei-Spalten-Layout -->
+              <div id="hangarLayout">
+                <!-- Linke Spalte: Kategorien -->
+                <div id="hangarCategories">
+                  <!-- Kategorien werden dynamisch eingefügt -->
+                </div>
+                
+                <!-- Mittlere Spalte: Leer (Raumschiff-Anzeige kommt später) -->
+                <div id="hangarCenter">
+                  <!-- Wird später gefüllt -->
+                </div>
+                
+                <!-- Rechte Spalte: Credits + Upgrade-Stufen -->
+                <div id="hangarItems">
+                  <!-- Credits-Anzeige (wird als erstes Element eingefügt) -->
+                  <div id="hangarCreditsDisplay" style="display: none; align-items: center; justify-content: flex-end; gap: 8px; font-size: 16px; color: rgba(245,250,255,0.9); padding: 12px 16px; background: rgba(20, 30, 50, 0.8); border: none; border-radius: 8px; margin-bottom: 16px;">
+                    <span id="creditsDisplay" style="font-size: 18px; color: rgba(100,255,200,1); font-weight: bold;">0</span>
+                    <span>CREDITS</span>
+                  </div>
+                  <!-- Items werden dynamisch eingefügt -->
+                </div>
               </div>
-              <div id="shopUpgrades" style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px; min-width: 400px;">
-                <!-- Upgrades werden dynamisch eingefügt -->
-              </div>
-              <div class="row" style="margin-top:20px">
-                <button class="btn btn-large" id="shopBackBtn">Back</button>
-              </div>
-            </div>
+        </div>
           </div>
         </div>
       </div>
