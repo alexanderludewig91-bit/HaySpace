@@ -18,19 +18,24 @@ export class Shop {
     // Upgrade-Definitionen mit Symbolen (Unicode als Platzhalter)
     this.upgradeDefinitions = {
       weapon: {
-        name: 'Weapon Upgrade',
+        name: 'Multi Fire',
         icon: '⚔️',
         description: 'Increases number of simultaneous shots',
         maxLevel: 2,
         getLevelDescription: (level) => {
           if (level === 0) return '1 shot';
-          if (level === 1) return '2 shots';
-          if (level === 2) return '3 shots';
+          if (level === 1) return 'Double Fire';
+          if (level === 2) return 'Triple Fire';
           return 'MAX';
+        },
+        getLevelName: (level) => {
+          if (level === 1) return 'Double Fire';
+          if (level === 2) return 'Triple Fire';
+          return `Level ${level}`;
         }
       },
       overheat: {
-        name: 'Overheat Protection',
+        name: 'Thermal Control',
         icon: '❄️',
         description: 'Weapon overheats slower',
         maxLevel: 3,
@@ -40,10 +45,16 @@ export class Shop {
           if (level === 2) return '30% slower';
           if (level === 3) return '50% slower';
           return 'MAX';
+        },
+        getLevelName: (level) => {
+          if (level === 1) return 'Enhanced Cooling';
+          if (level === 2) return 'Super Cooling';
+          if (level === 3) return 'Ultra Cooling';
+          return `Level ${level}`;
         }
       },
       speed: {
-        name: 'Speed Boost',
+        name: 'Speed Control',
         icon: '⚡',
         description: 'Increases acceleration and max speed',
         maxLevel: 5,
@@ -51,15 +62,33 @@ export class Shop {
           if (level === 0) return '1.0x';
           const speed = 1.0 + (level * 0.2);
           return `${speed.toFixed(1)}x`;
+        },
+        getLevelName: (level) => {
+          if (level === 1) return 'Speed I';
+          if (level === 2) return 'Speed II';
+          if (level === 3) return 'Speed III';
+          if (level === 4) return 'Speed IV';
+          if (level === 5) return 'Speed V';
+          return `Level ${level}`;
         }
       },
       dash: {
-        name: 'Dash System',
+        name: 'Boost System',
         icon: '💨',
         description: 'Quick movement burst',
-        maxLevel: 1,
+        maxLevel: 3,
         getLevelDescription: (level) => {
-          return level === 0 ? 'Disabled' : 'Enabled';
+          if (level === 0) return 'Disabled';
+          if (level === 1) return 'Enabled';
+          if (level === 2) return 'Enhanced';
+          if (level === 3) return 'Ultra';
+          return 'MAX';
+        },
+        getLevelName: (level) => {
+          if (level === 1) return 'Boost Enabled';
+          if (level === 2) return 'Enhanced Boost';
+          if (level === 3) return 'Ultra Boost';
+          return `Level ${level}`;
         }
       },
       shield: {
@@ -71,6 +100,14 @@ export class Shop {
           if (level === 0) return '100%';
           const shield = 100 * (1 + (level * 0.2));
           return `${Math.round(shield)}%`;
+        },
+        getLevelName: (level) => {
+          if (level === 1) return '120% Shield';
+          if (level === 2) return '140% Shield';
+          if (level === 3) return '160% Shield';
+          if (level === 4) return '180% Shield';
+          if (level === 5) return '200% Shield';
+          return `Level ${level}`;
         }
       }
     };
@@ -324,15 +361,22 @@ export class Shop {
     const maxLevel = definition.maxLevel;
     console.log('renderItems() - Kategorie:', this.selectedCategory, 'maxLevel:', maxLevel);
     
-    // Alle Stufen von 0 bis maxLevel rendern
-    for (let level = 0; level <= maxLevel; level++) {
-      const currentLevel = this.upgradeSystem.getLevel(this.selectedCategory);
+    // Alle Stufen von 1 bis maxLevel rendern (Level 0 ist Standard und wird nicht angezeigt)
+    const currentLevel = this.upgradeSystem.getLevel(this.selectedCategory); // Einmal außerhalb der Schleife holen für Konsistenz
+    
+    for (let level = 1; level <= maxLevel; level++) {
       const isOwned = level <= currentLevel;
       const isNext = level === currentLevel + 1;
-      const price = isNext ? this.upgradeSystem.getPrice(this.selectedCategory, level) : null;
+      // Für alle Kategorien zeigen wir alle Level immer an, aber nur das nächste verfügbare Level ist kaufbar
+      const showItem = true; // Alle Level werden immer angezeigt
+      // Nur das nächste Level ist kaufbar
+      const isAvailable = isNext;
+      // Preis nur setzen, wenn das Level verfügbar ist
+      const price = isAvailable ? this.upgradeSystem.getPrice(this.selectedCategory, level) : null;
       const canAfford = price !== null && this.upgradeSystem.canAfford(this.selectedCategory, level);
       
-      const itemElement = this.createItemElement(this.selectedCategory, definition, level, isOwned, isNext, price, canAfford);
+      // Alle Items rendern
+      const itemElement = this.createItemElement(this.selectedCategory, definition, level, isOwned, isAvailable, price, canAfford);
       this.hangarItems.appendChild(itemElement);
     }
     
@@ -342,9 +386,9 @@ export class Shop {
   /**
    * Erstellt ein Item-Element für eine bestimmte Stufe
    */
-  createItemElement(upgradeType, definition, level, isOwned, isNext, price, canAfford) {
+  createItemElement(upgradeType, definition, level, isOwned, isAvailable, price, canAfford) {
     const container = document.createElement('div');
-    const borderColor = isOwned ? 'rgba(100, 255, 200, 0.75)' : (isNext && canAfford ? 'rgba(77, 227, 255, 0.75)' : 'rgba(100, 100, 120, 0.4)');
+    const borderColor = isOwned ? 'rgba(100, 255, 200, 0.75)' : (isAvailable && canAfford ? 'rgba(77, 227, 255, 0.75)' : 'rgba(100, 100, 120, 0.4)');
     container.style.cssText = `
       display: flex;
       flex-direction: column;
@@ -364,7 +408,7 @@ export class Shop {
       opacity: 1 !important;
       pointer-events: auto;
       box-shadow: 
-        0 0 25px ${isOwned ? 'rgba(100, 255, 200, 0.3)' : (isNext && canAfford ? 'rgba(77, 227, 255, 0.3)' : 'rgba(0,0,0,0.2)')},
+        0 0 25px ${isOwned ? 'rgba(100, 255, 200, 0.3)' : (isAvailable && canAfford ? 'rgba(77, 227, 255, 0.3)' : 'rgba(0,0,0,0.2)')},
         0 15px 38px rgba(0,0,0,.25),
         0 2.5px 0 rgba(255,255,255,.12) inset;
     `;
@@ -372,11 +416,20 @@ export class Shop {
     // Header mit Icon und Name
     const header = document.createElement('div');
     header.style.cssText = 'display: flex; align-items: center; gap: 12px;';
+    
+    // Für weapon (Multi Fire), overheat (Thermal Control), speed (Speed Control), shield und dash (Boost System) verwenden wir spezielle Namen ohne Level-Nummer und ohne Untertitel
+    const levelName = ((upgradeType === 'weapon' || upgradeType === 'overheat' || upgradeType === 'speed' || upgradeType === 'shield' || upgradeType === 'dash') && definition.getLevelName) 
+      ? definition.getLevelName(level) 
+      : `${definition.name} Level ${level}`;
+    
+    // Untertitel nur anzeigen, wenn es nicht weapon, overheat, speed, shield oder dash ist
+    const showSubtitle = upgradeType !== 'weapon' && upgradeType !== 'overheat' && upgradeType !== 'speed' && upgradeType !== 'shield' && upgradeType !== 'dash';
+    
     header.innerHTML = `
       <span style="font-size: 24px;">${definition.icon}</span>
       <div style="flex: 1;">
-        <div style="font-family: 'Orbitron', ui-sans-serif, system-ui, sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(245,250,255,0.94);">${definition.name} Level ${level}</div>
-        <div style="font-size: 13px; color: rgba(245,250,255,0.7); margin-top: 4px;">${definition.getLevelDescription(level)}</div>
+        <div style="font-family: 'Orbitron', ui-sans-serif, system-ui, sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(245,250,255,0.94);">${levelName}</div>
+        ${showSubtitle ? `<div style="font-size: 13px; color: rgba(245,250,255,0.7); margin-top: 4px;">${definition.getLevelDescription(level)}</div>` : ''}
       </div>
     `;
     container.appendChild(header);
@@ -390,7 +443,7 @@ export class Shop {
       statusBadge.style.cssText = 'padding: 4px 12px; background: rgba(100, 255, 200, 0.2); color: rgba(100, 255, 200, 1); border-radius: 4px; font-size: 12px; font-weight: 600;';
       statusBadge.textContent = 'EQUIPPED';
       statusRow.appendChild(statusBadge);
-    } else if (isNext) {
+    } else if (isAvailable && price !== null) {
       const priceDisplay = document.createElement('span');
       priceDisplay.style.cssText = `font-size: 16px; font-weight: bold; color: ${canAfford ? 'rgba(100,255,200,1)' : 'rgba(255,100,100,1)'};`;
       priceDisplay.textContent = `${price.toLocaleString()} Credits`;

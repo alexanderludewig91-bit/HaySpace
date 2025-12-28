@@ -23,7 +23,7 @@ export class UpgradeSystem {
       weapon: [500, 1000],           // Stufe 1, Stufe 2
       overheat: [400, 800, 1500],    // Stufe 1, Stufe 2, Stufe 3
       speed: [300, 600, 1000, 1500, 2500],  // Stufe 1-5
-      dash: [800],                   // Stufe 1
+      dash: [800, 1500, 2500],       // Stufe 1, Stufe 2, Stufe 3
       shield: [400, 800, 1200, 1800, 2500]  // Stufe 1-5
     };
     
@@ -123,6 +123,19 @@ export class UpgradeSystem {
   }
   
   /**
+   * Gibt die Dash Cooldown-Zeit basierend auf dem Level zurück
+   * @param {number} level - Dash Level (0-3)
+   * @returns {number} Cooldown-Zeit in Sekunden
+   */
+  getDashCooldown(level) {
+    if (level === 0) return 999; // Deaktiviert (sehr hoher Wert)
+    if (level === 1) return 2.0;  // 2 Sekunden
+    if (level === 2) return 1.2;  // 1.2 Sekunden
+    if (level === 3) return 0.5;  // 0.5 Sekunden
+    return 2.0; // Fallback
+  }
+  
+  /**
    * Kauft ein Upgrade
    * @returns {boolean} true wenn erfolgreich, false wenn nicht genug Credits oder bereits max Stufe
    */
@@ -191,6 +204,9 @@ export class UpgradeSystem {
       
       // Dash: Aktiviert wenn Stufe >= 1
       dashEnabled: this.upgrades.dash >= 1,
+      
+      // Dash Cooldown: Basierend auf Level
+      dashCooldown: this.getDashCooldown(this.upgrades.dash),
       
       // Shield: Basis 100 + Prozent-Erhöhung
       shieldMax: 100 * (1 + (this.upgrades.shield * 0.2))

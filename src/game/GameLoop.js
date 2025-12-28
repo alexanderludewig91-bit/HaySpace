@@ -213,3 +213,4 @@ export function resetGameLoop() {
   accumulator = 0;
 }
 
+

@@ -135,9 +135,8 @@ export function showScreen(screenName, dependencies) {
   }
   // devMode wird nicht über showScreen gehandhabt, da es ein Overlay ist
   
-  if (screenName !== 'pause') {
-    DOM.overlay?.classList.remove('hidden');
-  }
+  // Overlay für alle Screens anzeigen (inkl. Pause-Menü)
+  DOM.overlay?.classList.remove('hidden');
   
   // Gamepad-Navigation für den Screen aktivieren
   setTimeout(() => {

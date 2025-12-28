@@ -643,7 +643,10 @@ export class Game {
     const dashPressed = (keys.has('ShiftLeft') || keys.has('ShiftRight')) || 
                         (gamepadInput && gamepadInput.isDashing());
     if (dashPressed && this.player.dashCD <= 0 && this.dashEnabled !== false){
-      this.player.dashCD = this.hardMode ? 0.55 : 0.45;
+      // Cooldown basierend auf Dash-Level (aus upgradeSystem)
+      const dashLevel = this.upgradeSystem ? this.upgradeSystem.getLevel('dash') : 1;
+      const dashCooldown = this.upgradeSystem ? this.upgradeSystem.getDashCooldown(dashLevel) : 2.0;
+      this.player.dashCD = dashCooldown;
       this.player.inv = Math.max(this.player.inv, 0.40);
       const dx = (ax!==0||ay!==0) ? ax : 0;
       const dy = (ax!==0||ay!==0) ? ay : -1;

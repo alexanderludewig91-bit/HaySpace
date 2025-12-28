@@ -132,3 +132,4 @@ export function initDOMReferences() {
   DOM.titleStarfieldCtx = DOM.titleStarfieldCanvas?.getContext('2d');
 }
 
+
