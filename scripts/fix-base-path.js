@@ -56,7 +56,14 @@ writeFileSync(indexPath, html, 'utf-8');
 if (existsSync(assetsDir)) {
   const assetFiles = readdirSync(assetsDir);
   
+  console.log(`Found ${assetFiles.length} files in assets directory`);
+  
   for (const file of assetFiles) {
+    // Nur JavaScript- und CSS-Dateien verarbeiten
+    if (!file.match(/\.(js|css)$/)) {
+      continue;
+    }
+    
     const filePath = join(assetsDir, file);
     let content = readFileSync(filePath, 'utf-8');
     const originalContent = content;
@@ -69,20 +76,27 @@ if (existsSync(assetsDir)) {
     
     // Hangar-Bild: /hangar.png -> /HaySpace/hangar.png
     // Muss auch in url('/hangar.png') Strings funktionieren
-    const hangarMatches = content.match(/\/hangar\.png/g);
-    if (hangarMatches) {
+    // Prüfe zuerst, ob überhaupt hangar.png vorkommt
+    if (content.includes('hangar.png')) {
+      const beforeHangar = content;
+      
+      // Alle Varianten von /hangar.png ersetzen (auch in Strings, Template-Strings, etc.)
+      // Pattern: /hangar.png (mit oder ohne Anführungszeichen davor/nachher)
       content = content.replace(/\/hangar\.png/g, `${base}hangar.png`);
-      console.log(`  → Fixed ${hangarMatches.length} hangar.png reference(s)`);
-    }
-    
-    // Auch url('/hangar.png') explizit behandeln
-    const urlHangarMatches = content.match(/url\(['"]\/hangar\.png['"]\)/g);
-    if (urlHangarMatches) {
+      
+      // Auch url('/hangar.png') oder url("/hangar.png") explizit behandeln
       content = content.replace(/url\(['"]\/hangar\.png['"]\)/g, (match) => {
         const quote = match.includes("'") ? "'" : '"';
         return `url(${quote}${base}hangar.png${quote})`;
       });
-      console.log(`  → Fixed ${urlHangarMatches.length} url('/hangar.png') reference(s)`);
+      
+      // Auch url(`/hangar.png`) (Template-String)
+      content = content.replace(/url\(`\/hangar\.png`\)/g, `url(\`${base}hangar.png\`)`);
+      
+      if (content !== beforeHangar) {
+        const matches = (beforeHangar.match(/\/hangar\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} hangar.png reference(s) in ${file}`);
+      }
     }
     
     if (content !== originalContent) {

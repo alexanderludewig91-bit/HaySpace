@@ -34,6 +34,15 @@ jobs:
       - name: Build
         run: npm run build
         
+      - name: Verify build output
+        run: |
+          echo "Checking dist directory contents:"
+          ls -la dist/ || echo "dist/ not found"
+          echo "Checking for hangar.png:"
+          ls -la dist/hangar.png || echo "WARNING: hangar.png not found in dist/"
+          echo "Checking assets directory:"
+          ls -la dist/assets/ | head -20 || echo "assets/ not found"
+        
       - name: Fix base path
         run: |
           echo "Repository name: ${{ github.event.repository.name }}"
