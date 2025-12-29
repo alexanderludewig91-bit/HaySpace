@@ -40,11 +40,15 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Dist contents:"
           ls -la dist/ || echo "dist/ not found"
+          echo "Checking for hangar.png in dist:"
+          ls -la dist/hangar.png || echo "WARNING: hangar.png not found in dist/"
           echo "Script exists:"
           ls -la scripts/fix-base-path.js || echo "Script not found"
           echo "Running fix script..."
           node scripts/fix-base-path.js
           echo "Verifying fix..."
+          echo "Checking for hangar.png references in assets:"
+          grep -r "hangar.png" dist/assets/ || echo "No hangar.png references found in assets"
           echo "First 20 lines of fixed HTML:"
           head -20 dist/index.html
           echo "Checking for assets paths:"

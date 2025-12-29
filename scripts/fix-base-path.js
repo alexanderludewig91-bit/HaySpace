@@ -39,6 +39,10 @@ console.log('Original CSS:', originalCss);
 const beforeReplace = html;
 html = html.replace(/(href|src)="\/assets\//g, `$1="${base}assets/`);
 
+// Auch Bild-Pfade im HTML korrigieren (falls vorhanden)
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/hangar\.png/g, `$1"${base}hangar.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/hangar\.png/g, `$1'${base}hangar.png`);
+
 if (html === beforeReplace) {
   console.warn('WARNING: No /assets/ paths found to replace!');
 } else {
@@ -64,10 +68,21 @@ if (existsSync(assetsDir)) {
     content = content.replace(/\/hayspace-cover\.png/g, `${base}hayspace-cover.png`);
     
     // Hangar-Bild: /hangar.png -> /HaySpace/hangar.png
+    // Muss auch in url('/hangar.png') Strings funktionieren
     const hangarMatches = content.match(/\/hangar\.png/g);
     if (hangarMatches) {
       content = content.replace(/\/hangar\.png/g, `${base}hangar.png`);
       console.log(`  → Fixed ${hangarMatches.length} hangar.png reference(s)`);
+    }
+    
+    // Auch url('/hangar.png') explizit behandeln
+    const urlHangarMatches = content.match(/url\(['"]\/hangar\.png['"]\)/g);
+    if (urlHangarMatches) {
+      content = content.replace(/url\(['"]\/hangar\.png['"]\)/g, (match) => {
+        const quote = match.includes("'") ? "'" : '"';
+        return `url(${quote}${base}hangar.png${quote})`;
+      });
+      console.log(`  → Fixed ${urlHangarMatches.length} url('/hangar.png') reference(s)`);
     }
     
     if (content !== originalContent) {
