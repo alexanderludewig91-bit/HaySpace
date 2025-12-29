@@ -63,6 +63,13 @@ if (existsSync(assetsDir)) {
     // Cover-Bild: /hayspace-cover.png -> /HaySpace/hayspace-cover.png
     content = content.replace(/\/hayspace-cover\.png/g, `${base}hayspace-cover.png`);
     
+    // Hangar-Bild: /hangar.png -> /HaySpace/hangar.png
+    const hangarMatches = content.match(/\/hangar\.png/g);
+    if (hangarMatches) {
+      content = content.replace(/\/hangar\.png/g, `${base}hangar.png`);
+      console.log(`  → Fixed ${hangarMatches.length} hangar.png reference(s)`);
+    }
+    
     if (content !== originalContent) {
       writeFileSync(filePath, content, 'utf-8');
       console.log(`✓ Fixed paths in ${file}`);
