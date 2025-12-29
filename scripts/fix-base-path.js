@@ -42,6 +42,8 @@ html = html.replace(/(href|src)="\/assets\//g, `$1="${base}assets/`);
 // Auch Bild-Pfade im HTML korrigieren (falls vorhanden)
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/hangar\.png/g, `$1"${base}hangar.png`);
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/hangar\.png/g, `$1'${base}hangar.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/spaceship\.png/g, `$1"${base}spaceship.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/spaceship\.png/g, `$1'${base}spaceship.png`);
 
 if (html === beforeReplace) {
   console.warn('WARNING: No /assets/ paths found to replace!');
@@ -96,6 +98,19 @@ if (existsSync(assetsDir)) {
       if (content !== beforeHangar) {
         const matches = (beforeHangar.match(/\/hangar\.png/g) || []).length;
         console.log(`  → Fixed ${matches} hangar.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Spaceship-Bild: /spaceship.png -> /HaySpace/spaceship.png
+    if (content.includes('spaceship.png')) {
+      const beforeSpaceship = content;
+      
+      // Alle Varianten von /spaceship.png ersetzen
+      content = content.replace(/\/spaceship\.png/g, `${base}spaceship.png`);
+      
+      if (content !== beforeSpaceship) {
+        const matches = (beforeSpaceship.match(/\/spaceship\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} spaceship.png reference(s) in ${file}`);
       }
     }
     

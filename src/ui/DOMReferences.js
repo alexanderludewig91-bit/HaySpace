@@ -83,6 +83,7 @@ export function initDOMReferences() {
   DOM.canvas = document.getElementById('c');
   DOM.ctx = DOM.canvas.getContext('2d');
   DOM.ctx.imageSmoothingEnabled = true;
+  DOM.ctx.imageSmoothingQuality = 'high'; // Beste Bildqualität für scharfe Darstellung
   
   DOM.overlay = document.getElementById('overlay');
   DOM.titleScreen = document.getElementById('titleScreen');
