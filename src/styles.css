@@ -349,6 +349,30 @@ b{font-variant-numeric: tabular-nums;}
   transform: translate(-50%, -50%);
 }
 
+#levelComplete {
+  position: fixed !important;
+  z-index: 10000 !important; /* Sehr hoch, damit es über allem liegt */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#gameComplete {
+  position: fixed !important;
+  z-index: 10000 !important; /* Sehr hoch, damit es über allem liegt */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#gameOver {
+  position: fixed !important;
+  z-index: 10000 !important; /* Sehr hoch, damit es über allem liegt */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 #pauseMenu .btn-large{
   background: linear-gradient(180deg, rgba(20, 25, 40, 0.95), rgba(10, 15, 30, 0.95)); /* Matt, undurchsichtig */
   backdrop-filter: none; /* Kein Blur für matten Look */
@@ -363,9 +387,10 @@ b{font-variant-numeric: tabular-nums;}
     0 2.5px 0 rgba(255,255,255,.12) inset; /* 25% größer */
 }
 
-/* Level Complete und Game Complete Buttons im neuen Style */
+/* Level Complete, Game Complete und Game Over Buttons im neuen Style */
 #levelComplete .btn-large,
-#gameComplete .btn-large{
+#gameComplete .btn-large,
+#gameOver .btn-large{
   background: linear-gradient(180deg, rgba(20, 25, 40, 0.95), rgba(10, 15, 30, 0.95)); /* Matt, undurchsichtig */
   backdrop-filter: none; /* Kein Blur für matten Look */
   font-family: 'Orbitron', ui-sans-serif, system-ui, sans-serif; /* Spacige Schriftart */
@@ -639,6 +664,18 @@ p{margin:10px 0;line-height:1.55;color:rgba(245,250,255,.80)}
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto;
+  align-items: stretch; /* Stellt sicher, dass alle Karten die volle Breite nutzen */
+}
+
+/* Upgrade-Karten in der rechten Spalte - verhindert Stauchen */
+#hangarItems > div:not(#hangarCreditsDisplay) {
+  flex-shrink: 0 !important; /* Verhindert, dass Karten gestaucht werden */
+  min-height: 120px !important; /* Mindesthöhe für Karten */
+}
+
+/* Großer Abstand zwischen Credits und der ersten Upgrade-Karte */
+#hangarItems > #hangarCreditsDisplay + * {
+  margin-top: 60px !important;
 }
 
 #hangarCenter{
@@ -662,7 +699,7 @@ p{margin:10px 0;line-height:1.55;color:rgba(245,250,255,.80)}
   backdrop-filter: none;
   border: none; /* Keine Umrandung */
   border-radius: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 180px; /* Großer Abstand zu den darunterliegenden Upgrade-Karten */
   box-shadow: 
     0 0 25px rgba(100, 255, 200, 0.3), /* Leichter Glow-Effekt */
     0 15px 38px rgba(0,0,0,.25),
@@ -748,6 +785,45 @@ p{margin:10px 0;line-height:1.55;color:rgba(245,250,255,.80)}
     0 0 50px rgba(100, 255, 200, 0.2),
     0 15px 38px rgba(0,0,0,.25),
     0 2.5px 0 rgba(255,255,255,.12) inset !important;
+}
+
+/* Buy Button im Hangar - passt zum Stil der anderen Hangar-Buttons */
+.hangar-buy-button {
+  background: linear-gradient(180deg, rgba(20, 25, 40, 0.95), rgba(10, 15, 30, 0.95)) !important;
+  backdrop-filter: none !important;
+  border: 2.5px solid rgba(77, 227, 255, 0.75) !important;
+  color: rgba(245,250,255,0.94) !important;
+  font-family: 'Orbitron', ui-sans-serif, system-ui, sans-serif !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  padding: 10px 16px !important;
+  border-radius: 14px !important;
+  box-shadow: 
+    0 0 25px rgba(77, 227, 255, 0.3),
+    0 15px 38px rgba(0,0,0,.25),
+    0 2.5px 0 rgba(255,255,255,.12) inset !important;
+  transition: all 0.2s ease !important;
+}
+
+.hangar-buy-button:hover:not(:disabled) {
+  filter: brightness(1.06) !important;
+  border-color: rgba(77, 227, 255, 0.9) !important;
+  box-shadow: 
+    0 0 30px rgba(77, 227, 255, 0.4),
+    0 15px 38px rgba(0,0,0,.25),
+    0 2.5px 0 rgba(255,255,255,.12) inset !important;
+}
+
+.hangar-buy-button:active:not(:disabled) {
+  transform: translateY(1px) !important;
+}
+
+.hangar-buy-button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  border-color: rgba(100, 100, 120, 0.4) !important;
 }
 
 /* Volume Slider Styles */

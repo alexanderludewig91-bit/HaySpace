@@ -125,12 +125,7 @@ export function initGameLoop(dependencies) {
         
         // Prüfen, ob Spieler tot ist
         if (game.state === 'dead') {
-          DOM.overlay?.classList.remove('hidden');
-          const titleH1 = DOM.titleScreen?.querySelector('h1');
-          if (titleH1) {
-            titleH1.textContent = 'GAME OVER';
-          }
-          showScreen('title', dependencies);
+          showScreen('gameOver', dependencies);
         }
       }
       

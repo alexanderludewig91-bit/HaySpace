@@ -23,6 +23,7 @@ export const DOM = {
   levelList: null,
   levelComplete: null,
   gameComplete: null,
+  gameOver: null,
   pauseMenu: null,
   
   // Buttons - Main Menu
@@ -47,6 +48,10 @@ export const DOM = {
   backToLevelSelectFromCompleteBtn: null,
   levelCompleteTitle: null,
   levelCompleteText: null,
+  
+  // Buttons - Game Over
+  retryLevelFromGameOverBtn: null,
+  backToGameMenuFromGameOverBtn: null,
   
   // Buttons - New Game Warning
   newGameWarning: null,
@@ -93,6 +98,7 @@ export function initDOMReferences() {
   DOM.levelList = document.getElementById('levelList');
   DOM.levelComplete = document.getElementById('levelComplete');
   DOM.gameComplete = document.getElementById('gameComplete');
+  DOM.gameOver = document.getElementById('gameOver');
   DOM.pauseMenu = document.getElementById('pauseMenu');
   
   DOM.startJourneyBtn = document.getElementById('startJourneyBtn');
@@ -113,6 +119,9 @@ export function initDOMReferences() {
   DOM.backToLevelSelectFromCompleteBtn = document.getElementById('backToLevelSelectFromCompleteBtn');
   DOM.levelCompleteTitle = document.getElementById('levelCompleteTitle');
   DOM.levelCompleteText = document.getElementById('levelCompleteText');
+  
+  DOM.retryLevelFromGameOverBtn = document.getElementById('retryLevelFromGameOverBtn');
+  DOM.backToGameMenuFromGameOverBtn = document.getElementById('backToGameMenuFromGameOverBtn');
   
   DOM.newGameWarning = document.getElementById('newGameWarning');
   DOM.confirmNewGameBtn = document.getElementById('confirmNewGameBtn');

@@ -82,6 +82,10 @@ export function startLevel(level, dependencies) {
   // Alle Screens verstecken, damit Canvas wieder sichtbar wird
   DOM.titleScreen?.classList.add('hidden');
   DOM.levelSelect?.classList.add('hidden');
+  DOM.levelComplete?.classList.add('hidden');
+  DOM.gameComplete?.classList.add('hidden');
+  DOM.gameOver?.classList.add('hidden');
+  DOM.pauseMenu?.classList.add('hidden');
   // Levelauswahl-Content verstecken
   if (DOM.levelSelectContent) {
     DOM.levelSelectContent.style.display = 'none';

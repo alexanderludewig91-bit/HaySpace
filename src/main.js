@@ -114,6 +114,7 @@ const menuNavigationElements = {
   levelList: DOM.levelList,
   levelComplete: DOM.levelComplete,
   gameComplete: DOM.gameComplete,
+  gameOver: DOM.gameOver,
   pauseMenu: DOM.pauseMenu,
   startJourneyBtn: DOM.startJourneyBtn,
   newGameBtn: DOM.newGameBtn,
@@ -126,6 +127,8 @@ const menuNavigationElements = {
   nextLevelBtn: DOM.nextLevelBtn,
   backToLevelSelectBtn: DOM.backToLevelSelectBtn,
   backToLevelSelectFromCompleteBtn: DOM.backToLevelSelectFromCompleteBtn,
+  retryLevelFromGameOverBtn: DOM.retryLevelFromGameOverBtn,
+  backToGameMenuFromGameOverBtn: DOM.backToGameMenuFromGameOverBtn,
   confirmNewGameBtn: DOM.confirmNewGameBtn,
   cancelNewGameBtn: DOM.cancelNewGameBtn,
   settingsBackBtn: DOM.settingsBackBtn,
@@ -652,6 +655,26 @@ DOM.backToLevelSelectFromCompleteBtn?.addEventListener('click', () => {
   showScreen('levelSelect', dependencies);
 });
 
+// Game Over Buttons
+DOM.retryLevelFromGameOverBtn?.addEventListener('click', () => {
+  ensureAudio();
+  // Aktuelles Level erneut starten
+  startLevel(game.currentLevel, {
+    game,
+    upgradeSystem,
+    gamepad,
+    DOM,
+    hardMode,
+    setLevelCompleteDelayStarted,
+    setLevelCompleteTime
+  });
+});
+
+DOM.backToGameMenuFromGameOverBtn?.addEventListener('click', () => {
+  ensureAudio();
+  showGameMenu(dependencies);
+});
+
 // Pause Menu Buttons
 DOM.resumeBtn?.addEventListener('click', () => {
   hidePauseMenu(dependencies);
@@ -715,17 +738,35 @@ initDevMode(game, () => {
   game.unlockedLevels = [1];
 }, upgradeSystem);
 
-// Resize-Handler für Hangar-Layout (aktualisiert max-width bei Fenstergrößenänderung)
+// Resize-Handler für Hangar-Layout (aktualisiert max-width bei Fenstergrößenänderung und Zoom)
 let resizeTimeout;
-window.addEventListener('resize', () => {
+let lastViewportWidth = document.documentElement.clientWidth || window.innerWidth;
+let lastViewportHeight = document.documentElement.clientHeight || window.innerHeight;
+
+function handleResizeOrZoom() {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
     const shopContent = document.getElementById('shopContent');
     if (shopContent && shopContent.style.display !== 'none') {
       updateHangarLayoutWidth();
     }
+    // Aktualisiere Viewport-Größen für nächste Prüfung
+    lastViewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    lastViewportHeight = document.documentElement.clientHeight || window.innerHeight;
   }, 150);
-});
+}
+
+window.addEventListener('resize', handleResizeOrZoom);
+
+// Zoom-Erkennung durch regelmäßige Prüfung der Viewport-Größe (Zoom ändert clientWidth/Height)
+setInterval(() => {
+  const currentWidth = document.documentElement.clientWidth || window.innerWidth;
+  const currentHeight = document.documentElement.clientHeight || window.innerHeight;
+  // Prüfe ob sich die Viewport-Größe geändert hat (Zoom ändert clientWidth/Height, nicht innerWidth/Height)
+  if (Math.abs(currentWidth - lastViewportWidth) > 1 || Math.abs(currentHeight - lastViewportHeight) > 1) {
+    handleResizeOrZoom();
+  }
+}, 300);
 
 // Game Loop starten
 const gameLoop = initGameLoop(dependencies);

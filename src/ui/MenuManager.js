@@ -25,26 +25,34 @@ export function updateHangarLayoutWidth() {
     return;
   }
   
-  const img = new Image();
-  img.onload = () => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const imageAspectRatio = img.width / img.height; // 1536 / 1024 = 1.5
-    
-    // Berechne die tatsächliche gerenderte Breite mit contain
-    let renderedWidth;
-    if (viewportWidth / viewportHeight > imageAspectRatio) {
-      // Viewport ist breiter - Bild wird an der Höhe skaliert
-      renderedWidth = viewportHeight * imageAspectRatio;
-    } else {
-      // Viewport ist schmaler - Bild wird an der Breite skaliert
-      renderedWidth = viewportWidth;
-    }
-    
-    // Setze max-width auf den Grid-Container
-    hangarLayout.style.maxWidth = `${renderedWidth}px`;
-  };
-  img.src = '/hangar.png';
+  // Verwende requestAnimationFrame, um sicherzustellen, dass das Layout gerendert wurde
+  requestAnimationFrame(() => {
+    // Messe die tatsächliche gerenderte Breite des Hintergrundbildes
+    // Erstelle ein temporäres Bild-Element, um die gerenderte Größe zu messen
+    const img = new Image();
+    img.onload = () => {
+      // Hole die tatsächlichen Viewport-Dimensionen (berücksichtigt Zoom)
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+      const imageAspectRatio = img.width / img.height; // 1536 / 1024 = 1.5
+      
+      // Berechne die tatsächliche gerenderte Breite mit contain
+      let renderedWidth;
+      
+      if (viewportWidth / viewportHeight > imageAspectRatio) {
+        // Viewport ist breiter - Bild wird an der Höhe skaliert
+        renderedWidth = viewportHeight * imageAspectRatio;
+      } else {
+        // Viewport ist schmaler - Bild wird an der Breite skaliert
+        renderedWidth = viewportWidth;
+      }
+      
+      // Setze max-width auf den Grid-Container
+      // Subtrahiere etwas für Padding und um sicherzustellen, dass es nicht über das Bild hinausgeht
+      hangarLayout.style.maxWidth = `${Math.floor(renderedWidth - 60)}px`; // 60px für Padding und Sicherheitsabstand
+    };
+    img.src = '/hangar.png';
+  });
 }
 
 /**
@@ -75,6 +83,8 @@ export function showGameMenu(dependencies) {
   if (DOM.levelSelectContent) DOM.levelSelectContent.style.display = 'none';
   if (DOM.settingsContent) DOM.settingsContent.style.display = 'none';
   if (DOM.shopContent) DOM.shopContent.style.display = 'none';
+  // Game Over Meldung verstecken
+  if (DOM.gameOver) DOM.gameOver.classList.add('hidden');
   
   // Karte auf Standard-Größe setzen
   if (DOM.mainMenuCard) {

@@ -50,6 +50,9 @@ export function initGamepadMenuNavigation(elements, gamepad, ensureAudio) {
     } else if (!elements.gameComplete.classList.contains('hidden')) {
       // Game Complete -> Level Select
       elements.backToLevelSelectFromCompleteBtn.click();
+    } else if (elements.gameOver && !elements.gameOver.classList.contains('hidden')) {
+      // Game Over -> Game Menu (Standard)
+      elements.backToGameMenuFromGameOverBtn.click();
     }
     
     const newGameWarningContainer = document.getElementById('newGameWarningContainer');
@@ -82,10 +85,11 @@ export function initGamepadMenuNavigation(elements, gamepad, ensureAudio) {
     const isPauseVisible = elements.pauseMenu && !elements.pauseMenu.classList.contains('hidden');
     const isLevelCompleteVisible = elements.levelComplete && !elements.levelComplete.classList.contains('hidden');
     const isGameCompleteVisible = elements.gameComplete && !elements.gameComplete.classList.contains('hidden');
+    const isGameOverVisible = elements.gameOver && !elements.gameOver.classList.contains('hidden');
     const newGameWarningContainer = document.getElementById('newGameWarningContainer');
     const isWarningVisible = newGameWarningContainer && !newGameWarningContainer.classList.contains('hidden');
     
-    // Priorität: Level Complete und Game Complete haben höchste Priorität (überlagern andere Menüs)
+    // Priorität: Level Complete, Game Complete und Game Over haben höchste Priorität (überlagern andere Menüs)
     if (isLevelCompleteVisible) {
       // Level Complete: Prüfe welche Buttons sichtbar sind
       const levelCompleteButtons = [];
@@ -129,6 +133,16 @@ export function initGamepadMenuNavigation(elements, gamepad, ensureAudio) {
       buttons = levelCompleteButtons;
     } else if (isGameCompleteVisible) {
       buttons = [elements.backToLevelSelectFromCompleteBtn].filter(btn => btn && btn.offsetParent !== null);
+    } else if (isGameOverVisible) {
+      // Game Over: Beide Buttons verfügbar
+      const gameOverButtons = [];
+      if (elements.retryLevelFromGameOverBtn) {
+        gameOverButtons.push(elements.retryLevelFromGameOverBtn);
+      }
+      if (elements.backToGameMenuFromGameOverBtn) {
+        gameOverButtons.push(elements.backToGameMenuFromGameOverBtn);
+      }
+      buttons = gameOverButtons.filter(btn => btn && btn.offsetParent !== null);
     } else if (isPauseVisible) {
       // Pausenmenü-Buttons
       const pauseButtons = [];

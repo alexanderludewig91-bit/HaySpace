@@ -30,6 +30,7 @@ export function showScreen(screenName, dependencies) {
   }
   DOM.levelComplete?.classList.add('hidden');
   DOM.gameComplete?.classList.add('hidden');
+  DOM.gameOver?.classList.add('hidden');
   DOM.pauseMenu?.classList.add('hidden');
   const newGameWarningContainer = document.getElementById('newGameWarningContainer');
   if (newGameWarningContainer) {
@@ -98,6 +99,9 @@ export function showScreen(screenName, dependencies) {
   }
   else if (screenName === 'gameComplete') {
     DOM.gameComplete?.classList.remove('hidden');
+  }
+  else if (screenName === 'gameOver') {
+    DOM.gameOver?.classList.remove('hidden');
   }
   else if (screenName === 'pause') {
     DOM.pauseMenu?.classList.remove('hidden');

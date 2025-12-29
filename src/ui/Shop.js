@@ -401,9 +401,11 @@ export class Shop {
       transition: all 0.2s ease;
       position: relative;
       z-index: 103;
-      min-height: 80px;
+      min-height: 120px; /* Mindesthöhe, damit Inhalte nicht aus der Karte herausragen */
+      min-width: 280px; /* Mindestbreite, damit Inhalte nicht aus der Karte herausragen */
       width: 100%;
       box-sizing: border-box;
+      flex-shrink: 0; /* Verhindert, dass die Karte gestaucht wird */
       visibility: visible !important;
       opacity: 1 !important;
       pointer-events: auto;
@@ -436,7 +438,7 @@ export class Shop {
     
     // Status und Preis
     const statusRow = document.createElement('div');
-    statusRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-top: 8px;';
+    statusRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px;';
     
     if (isOwned) {
       const statusBadge = document.createElement('span');
@@ -450,10 +452,9 @@ export class Shop {
       statusRow.appendChild(priceDisplay);
       
       const buyButton = document.createElement('button');
-      buyButton.className = 'btn';
+      buyButton.className = 'btn hangar-buy-button';
       buyButton.textContent = canAfford ? 'Buy' : 'Not enough credits';
       buyButton.disabled = !canAfford;
-      buyButton.style.cssText = canAfford ? '' : 'opacity: 0.5; cursor: not-allowed;';
       buyButton.addEventListener('click', () => {
         if (canAfford && this.upgradeSystem.buyUpgrade(upgradeType, level)) {
           if (this.onUpgradePurchased) {
@@ -537,10 +538,9 @@ export class Shop {
       purchaseRow.appendChild(priceDisplay);
       
       const buyButton = document.createElement('button');
-      buyButton.className = 'btn';
+      buyButton.className = 'btn hangar-buy-button';
       buyButton.textContent = canAfford ? 'Buy' : 'Not enough credits';
       buyButton.disabled = !canAfford;
-      buyButton.style.cssText = canAfford ? '' : 'opacity: 0.5; cursor: not-allowed;';
       buyButton.addEventListener('click', () => {
         if (canAfford && this.upgradeSystem.buyUpgrade(upgradeType, nextLevel)) {
           if (this.onUpgradePurchased) {
