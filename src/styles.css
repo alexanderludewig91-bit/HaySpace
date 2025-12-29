@@ -244,6 +244,7 @@ b{font-variant-numeric: tabular-nums;}
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
+  transition: opacity 0.4s ease-in-out; /* Sanfter Übergang für Hintergrundbild-Wechsel */
 }
 
 .title-starfield-canvas{

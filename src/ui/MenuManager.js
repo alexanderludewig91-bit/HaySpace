@@ -65,6 +65,8 @@ export function showGameMenu(dependencies) {
   // Hintergrundbild zurück zum Titelbild wechseln
   const titleScreenBg = document.querySelector('.title-screen-bg');
   if (titleScreenBg) {
+    // Sicherstellen, dass Opacity auf 1 ist (falls sie beim Öffnen des Hangars geändert wurde)
+    titleScreenBg.style.opacity = '1';
     titleScreenBg.style.backgroundImage = "url('/hayspace-cover.png')";
     titleScreenBg.style.backgroundSize = 'contain'; // Zurück zu contain für Titelbild
     titleScreenBg.style.backgroundPosition = 'center';
@@ -179,14 +181,6 @@ export function showGameMenu(dependencies) {
 export function showShop(dependencies) {
   const { DOM, shop, setupGamepadNavigation } = dependencies;
   
-  // Hintergrundbild zu Hangar wechseln
-  const titleScreenBg = document.querySelector('.title-screen-bg');
-  if (titleScreenBg) {
-    titleScreenBg.style.backgroundImage = "url('/hangar.png')";
-    titleScreenBg.style.backgroundSize = 'contain'; // Originalformat wie beim Titelbild
-    titleScreenBg.style.backgroundPosition = 'center';
-  }
-  
   // Starfield ausblenden (nicht im Hangar)
   if (DOM.titleStarfieldCanvas) {
     DOM.titleStarfieldCanvas.style.opacity = '0';
@@ -203,6 +197,25 @@ export function showShop(dependencies) {
     
     animateButtonsExit(gameMenuButtons, () => {
       DOM.gameMenuContent.style.display = 'none';
+      
+      // Hintergrundbild zu Hangar wechseln NACH dem Ausblenden der Buttons mit Fade-Effekt
+      const titleScreenBg = document.querySelector('.title-screen-bg');
+      if (titleScreenBg) {
+        // Fade-Out des aktuellen Bildes
+        titleScreenBg.style.opacity = '0';
+        
+        // Nach Fade-Out das Bild wechseln und wieder einblenden
+        setTimeout(() => {
+          titleScreenBg.style.backgroundImage = "url('/hangar.png')";
+          titleScreenBg.style.backgroundSize = 'contain'; // Originalformat wie beim Titelbild
+          titleScreenBg.style.backgroundPosition = 'center';
+          
+          // Fade-In des neuen Bildes
+          setTimeout(() => {
+            titleScreenBg.style.opacity = '1';
+          }, 50);
+        }, 400); // Warten bis Fade-Out abgeschlossen ist
+      }
       
       // Shop Content einblenden mit Animation
       if (DOM.shopContent) {

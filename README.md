@@ -125,18 +125,21 @@ src/
 │   │                              # - Back-Button-Handling
 │   │                              # - Unterstützung für Shop/Werft-Menü
 │   │
-│   ├── Shop.js            # Shop-UI (279 Zeilen)
-│   │                       # - Upgrade-Shop/Werft-Interface
-│   │                       # - Grafische Darstellung der Upgrades
+│   ├── Shop.js            # Shop-UI (576 Zeilen)
+│   │                       # - Hangar-Interface (komplett überarbeitet)
+│   │                       # - Drei-Spalten-Layout (Kategorien, Mitte, Upgrades)
+│   │                       # - Dynamische Upgrade-Karten-Rendering
 │   │                       # - Kauf-Logik und Preis-Anzeige
-│   │                       # - Credits-Anzeige
+│   │                       # - Credits-Anzeige im Hangar
 │   │
 │   └── DevMode.js         # Dev Mode Panel (280+ Zeilen)
 │                           # - Level-Unlock-Funktionen
 │                           # - Save-Game-Management
 │                           # - Enemy-Übersicht
-│                           # - LocalStorage-Anzeige (statisch)
+│                           # - LocalStorage-Anzeige (dynamisch, alle Keys)
+│                           # - LocalStorage-Menü Toggle (Show/Hide)
 │                           # - Add 10k Credits Button
+│                           # - Dev Mode Button Toggle (Taste 9)
 │
 ├── systems/
 │   ├── AudioSystem.js     # Audio-System (184 Zeilen)
@@ -274,17 +277,32 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
 - **Shield**: Stellt Schild wieder her
 - **Speed/Upgrade Pickups**: Entfernt (ersetzt durch permanent Shop-Upgrades)
 
-### Upgrade-Shop-System
-- **Permanent Upgrades**: Werden im Shop gekauft und bleiben erhalten
-- **Upgrade-Typen**:
-  - **Waffe**: 2 Stufen (1→2→3 Schüsse gleichzeitig)
-  - **Overheat Protection**: 3 Stufen (15%, 30%, 50% langsamer)
-  - **Speed Boost**: 5 Stufen (+0.2, +0.4, +0.6, +0.8, +1.0 auf Basis 1.0)
-  - **Dash System**: 1 Stufe (aktiviert/deaktiviert)
-  - **Shield**: 5 Stufen (+20%, +40%, +60%, +80%, +100%)
+### Upgrade-Shop-System (Hangar)
+- **Permanent Upgrades**: Werden im Hangar gekauft und bleiben erhalten
+- **Hangar-Design**: Komplett überarbeitetes UI mit drei-Spalten-Layout
+  - **Linke Spalte**: Kategorie-Buttons (Multi Fire, Thermal Control, Speed Control, Boost System, Shield)
+  - **Mittlere Spalte**: Leer (Hangar-Titel ist Teil des Hintergrundbildes)
+  - **Rechte Spalte**: Upgrade-Karten mit Status (EQUIPPED/LOCKED/Buyable)
+- **Upgrade-Typen** (mit neuen Namen):
+  - **Multi Fire** (früher "Weapon Upgrade"): 2 Stufen
+    - Level 1: "Double Fire" (2 Schüsse gleichzeitig)
+    - Level 2: "Triple Fire" (3 Schüsse gleichzeitig)
+  - **Thermal Control** (früher "Overheat Protection"): 3 Stufen
+    - Level 1: "Enhanced Cooling" (15% langsamer)
+    - Level 2: "Super Cooling" (30% langsamer)
+    - Level 3: "Ultra Cooling" (50% langsamer)
+  - **Speed Control** (früher "Speed Boost"): 5 Stufen
+    - Level 1-5: "Speed I" bis "Speed V" (+0.2, +0.4, +0.6, +0.8, +1.0 auf Basis 1.0)
+  - **Boost System** (früher "Dash System"): 3 Stufen
+    - Level 1: "Boost Enabled" (2.0s Cooldown)
+    - Level 2: "Enhanced Boost" (1.2s Cooldown)
+    - Level 3: "Ultra Boost" (0.5s Cooldown)
+  - **Shield**: 5 Stufen
+    - Level 1-5: "120% Shield" bis "200% Shield" (+20%, +40%, +60%, +80%, +100%)
 - **Credits-System**: Score = Credits, kumulativ, verfallen nicht bei Tod
 - **Speicherung**: Upgrades und Credits im LocalStorage
-- **Menü-Struktur**: Seite 3 (Game Menu: Level-Auswahl/Werft), Seite 4 (Level-Auswahl)
+- **Responsive Design**: Layout passt sich an Browser-Zoom an, max-width basierend auf Hintergrundbild-Größe
+- **Hintergrundbild-Übergänge**: Fade-Effekt beim Öffnen/Schließen des Hangars
 
 ## Erweiterungsmöglichkeiten
 
@@ -378,17 +396,40 @@ Das Spiel besteht aus **5 Leveln**, die nacheinander freigeschaltet werden:
 - ✅ Settings-Menü integriert in Hauptmenü-Karte
 - ✅ Konsistente Menü-Navigation
 - ✅ Musik-Steuerung über UI
-- ✅ Upgrade-Shop/Werft-Interface
+- ✅ Hangar-Interface (komplett überarbeitet, früher "Shipyard")
+  - Drei-Spalten-Layout
+  - Responsive Design mit Zoom-Erkennung
+  - Fade-Übergänge für Hintergrundbilder
+  - Upgrade-Karten mit Status-Anzeige (EQUIPPED/LOCKED/Buyable)
 - ✅ Credits-Anzeige (statt Score)
-- ✅ Neue Menü-Struktur (Game Menu, Shop, Level-Auswahl)
+- ✅ Neue Menü-Struktur (Game Menu, Hangar, Level-Auswahl)
+- ✅ Game Over Screen mit Retry- und Game Menu-Buttons
+- ✅ Level Complete und Game Complete Screens mit hohem z-index
+- ✅ Alle Texte ins Englische übersetzt
 
 #### Upgrade-System
-- ✅ Permanent Upgrade-Shop
-- ✅ 5 Upgrade-Typen mit mehreren Stufen
+- ✅ Permanent Upgrade-Hangar (komplett überarbeitet)
+- ✅ 5 Upgrade-Typen mit mehreren Stufen (neue Namen)
+  - Multi Fire (Double Fire, Triple Fire)
+  - Thermal Control (Enhanced/Super/Ultra Cooling)
+  - Speed Control (Speed I-V)
+  - Boost System (Boost Enabled, Enhanced Boost, Ultra Boost)
+  - Shield (120%-200% Shield)
+- ✅ Boost System mit 3 Stufen und Cooldown-Reduktion
 - ✅ Credits-System (Score = Credits, kumulativ)
 - ✅ LocalStorage für Upgrades und Credits
 - ✅ Upgrades werden beim Level-Start angewendet
 - ✅ Pickups entfernt (nur Shield bleibt)
+- ✅ Alle Upgrade-Karten immer sichtbar (auch Locked)
+
+#### Dev Mode
+- ✅ Dev Mode Button (standardmäßig ausgeblendet)
+- ✅ Toggle mit Taste 9 (Keyboard)
+- ✅ LocalStorage-Menü (standardmäßig ausgeblendet)
+- ✅ Show/Hide LocalStorage Button
+- ✅ Vollständige LocalStorage-Anzeige (alle Keys)
+- ✅ Level-Unlock-Funktionen
+- ✅ Add 10k Credits Button
 
 ### Geplante Features
 - Couch Co-op für 2-4 Spieler
@@ -559,7 +600,7 @@ node scripts/fix-base-path.js
 
 3. **Game Menu** (`gameMenuContent`) - Seite 3
    - Level Select Button (führt zu Seite 4)
-   - Werft Button (Shop für Upgrades)
+   - Hangar Button (Upgrade-Shop)
    - Back Button
 
 4. **Level-Auswahl** (`levelSelectContent`) - Seite 4
@@ -567,12 +608,14 @@ node scripts/fix-base-path.js
    - Dynamische Level-Buttons (gesperrt/freigeschaltet)
    - Back Button (zurück zu Game Menu)
 
-5. **Shop/Werft** (`shopContent`)
-   - Upgrade-Shop-Interface
-   - Grafische Darstellung aller Upgrades
-   - Aktuelle Stufe, nächste Stufe, Preis
-   - Credits-Anzeige
-   - Back Button (zurück zu Game Menu)
+5. **Hangar** (`shopContent`) - Komplett überarbeitet
+   - Drei-Spalten-Layout
+   - Linke Spalte: Kategorie-Buttons mit Icons
+   - Rechte Spalte: Upgrade-Karten mit Status und Preisen
+   - Credits-Anzeige oben rechts
+   - Back Button unten links in der Kategorie-Spalte
+   - Responsive Design mit dynamischer max-width
+   - Hintergrundbild-Übergang mit Fade-Effekt
 
 6. **Settings-Menü** (`settingsContent`)
    - Wird in der gleichen Karte wie Hauptmenü angezeigt
@@ -583,15 +626,24 @@ node scripts/fix-base-path.js
 5. **Pause-Menü** (`pauseMenu`)
    - Resume Button
    - Level Select Button
+   - Immer sichtbar mit hohem z-index (10000)
 
 6. **Level Complete** (`levelComplete`)
    - Gratulation
-   - Next Level Button (Level 1-2)
+   - Next Level Button (Level 1-4)
    - Level Select Button
+   - Immer sichtbar mit hohem z-index (10000)
 
 7. **Game Complete** (`gameComplete`)
-   - Gratulation für alle 3 Level
+   - Gratulation für alle 5 Level
    - Level Select Button
+   - Immer sichtbar mit hohem z-index (10000)
+
+8. **Game Over** (`gameOver`)
+   - Meldung bei Verlust aller Leben
+   - Retry Button (startet aktuelles Level erneut)
+   - Game Menu Button (zurück zum Game Menu)
+   - Immer sichtbar mit hohem z-index (10000)
 
 ### Code-Stellen
 - HTML-Struktur: `index.html`
@@ -617,6 +669,10 @@ node scripts/fix-base-path.js
   - `sfxVolume`: Soundeffekte-Lautstärke (0-1)
   - `upgrades`: Upgrade-Daten (Upgrade-Stufen und Credits)
     - Format: `{upgrades: {weapon, overheat, speed, dash, shield}, credits: number}`
+- **UI-Übergänge**:
+  - Fade-Effekte für Hintergrundbilder (0.4s ease-in-out)
+  - Button-Animationen beim Ein-/Ausblenden
+  - Responsive Layout-Anpassung bei Browser-Zoom
 
 ## Entwicklung
 
