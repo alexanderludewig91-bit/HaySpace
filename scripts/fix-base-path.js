@@ -44,6 +44,28 @@ html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/hangar\.png/g, 
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/hangar\.png/g, `$1'${base}hangar.png`);
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/spaceship\.png/g, `$1"${base}spaceship.png`);
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/spaceship\.png/g, `$1'${base}spaceship.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/drone\.png/g, `$1"${base}drone.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/drone\.png/g, `$1'${base}drone.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/striker\.png/g, `$1"${base}striker.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/striker\.png/g, `$1'${base}striker.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/tank\.png/g, `$1"${base}tank.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/tank\.png/g, `$1'${base}tank.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/hunter\.png/g, `$1"${base}hunter.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/hunter\.png/g, `$1'${base}hunter.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/crusher\.png/g, `$1"${base}crusher.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/crusher\.png/g, `$1'${base}crusher.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/guardian\.png/g, `$1"${base}guardian.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/guardian\.png/g, `$1'${base}guardian.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/destroyer\.png/g, `$1"${base}destroyer.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/destroyer\.png/g, `$1'${base}destroyer.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/reaper\.png/g, `$1"${base}reaper.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/reaper\.png/g, `$1'${base}reaper.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/titan\.png/g, `$1"${base}titan.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/titan\.png/g, `$1'${base}titan.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/void\.png/g, `$1"${base}void.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/void\.png/g, `$1'${base}void.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/apocalypse\.png/g, `$1"${base}apocalypse.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/apocalypse\.png/g, `$1'${base}apocalypse.png`);
 
 if (html === beforeReplace) {
   console.warn('WARNING: No /assets/ paths found to replace!');
@@ -111,6 +133,149 @@ if (existsSync(assetsDir)) {
       if (content !== beforeSpaceship) {
         const matches = (beforeSpaceship.match(/\/spaceship\.png/g) || []).length;
         console.log(`  → Fixed ${matches} spaceship.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Drone-Bild: /drone.png -> /HaySpace/drone.png
+    if (content.includes('drone.png')) {
+      const beforeDrone = content;
+      
+      // Alle Varianten von /drone.png ersetzen
+      content = content.replace(/\/drone\.png/g, `${base}drone.png`);
+      
+      if (content !== beforeDrone) {
+        const matches = (beforeDrone.match(/\/drone\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} drone.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Striker-Bild: /striker.png -> /HaySpace/striker.png
+    if (content.includes('striker.png')) {
+      const beforeStriker = content;
+      
+      // Alle Varianten von /striker.png ersetzen
+      content = content.replace(/\/striker\.png/g, `${base}striker.png`);
+      
+      if (content !== beforeStriker) {
+        const matches = (beforeStriker.match(/\/striker\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} striker.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Tank-Bild: /tank.png -> /HaySpace/tank.png
+    if (content.includes('tank.png')) {
+      const beforeTank = content;
+      
+      // Alle Varianten von /tank.png ersetzen
+      content = content.replace(/\/tank\.png/g, `${base}tank.png`);
+      
+      if (content !== beforeTank) {
+        const matches = (beforeTank.match(/\/tank\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} tank.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Hunter-Bild: /hunter.png -> /HaySpace/hunter.png
+    if (content.includes('hunter.png')) {
+      const beforeHunter = content;
+      
+      // Alle Varianten von /hunter.png ersetzen
+      content = content.replace(/\/hunter\.png/g, `${base}hunter.png`);
+      
+      if (content !== beforeHunter) {
+        const matches = (beforeHunter.match(/\/hunter\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} hunter.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Crusher-Bild: /crusher.png -> /HaySpace/crusher.png
+    if (content.includes('crusher.png')) {
+      const beforeCrusher = content;
+      
+      // Alle Varianten von /crusher.png ersetzen
+      content = content.replace(/\/crusher\.png/g, `${base}crusher.png`);
+      
+      if (content !== beforeCrusher) {
+        const matches = (beforeCrusher.match(/\/crusher\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} crusher.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Guardian-Bild: /guardian.png -> /HaySpace/guardian.png
+    if (content.includes('guardian.png')) {
+      const beforeGuardian = content;
+      
+      // Alle Varianten von /guardian.png ersetzen
+      content = content.replace(/\/guardian\.png/g, `${base}guardian.png`);
+      
+      if (content !== beforeGuardian) {
+        const matches = (beforeGuardian.match(/\/guardian\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} guardian.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Destroyer-Bild: /destroyer.png -> /HaySpace/destroyer.png
+    if (content.includes('destroyer.png')) {
+      const beforeDestroyer = content;
+      
+      // Alle Varianten von /destroyer.png ersetzen
+      content = content.replace(/\/destroyer\.png/g, `${base}destroyer.png`);
+      
+      if (content !== beforeDestroyer) {
+        const matches = (beforeDestroyer.match(/\/destroyer\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} destroyer.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Reaper-Bild: /reaper.png -> /HaySpace/reaper.png
+    if (content.includes('reaper.png')) {
+      const beforeReaper = content;
+      
+      // Alle Varianten von /reaper.png ersetzen
+      content = content.replace(/\/reaper\.png/g, `${base}reaper.png`);
+      
+      if (content !== beforeReaper) {
+        const matches = (beforeReaper.match(/\/reaper\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} reaper.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Titan-Bild: /titan.png -> /HaySpace/titan.png
+    if (content.includes('titan.png')) {
+      const beforeTitan = content;
+      
+      // Alle Varianten von /titan.png ersetzen
+      content = content.replace(/\/titan\.png/g, `${base}titan.png`);
+      
+      if (content !== beforeTitan) {
+        const matches = (beforeTitan.match(/\/titan\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} titan.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Void-Bild: /void.png -> /HaySpace/void.png
+    if (content.includes('void.png')) {
+      const beforeVoid = content;
+      
+      // Alle Varianten von /void.png ersetzen
+      content = content.replace(/\/void\.png/g, `${base}void.png`);
+      
+      if (content !== beforeVoid) {
+        const matches = (beforeVoid.match(/\/void\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} void.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Apocalypse-Bild: /apocalypse.png -> /HaySpace/apocalypse.png
+    if (content.includes('apocalypse.png')) {
+      const beforeApocalypse = content;
+      
+      // Alle Varianten von /apocalypse.png ersetzen
+      content = content.replace(/\/apocalypse\.png/g, `${base}apocalypse.png`);
+      
+      if (content !== beforeApocalypse) {
+        const matches = (beforeApocalypse.match(/\/apocalypse\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} apocalypse.png reference(s) in ${file}`);
       }
     }
     

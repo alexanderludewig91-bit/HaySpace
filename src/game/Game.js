@@ -432,6 +432,27 @@ export class Game {
     this.particles.push({x,y, r: 8*scale, life: 0.35*scale, kind:'ring', a: 1});
   }
 
+  addFireExplosion(x, y, scale=1){
+    // Feuerartige Explosion mit rot/orange Partikeln
+    const n = 35 + (scale*25|0); // Mehr Partikel für intensiveres Feuer
+    for (let i=0;i<n;i++){
+      this.particles.push({
+        x, y,
+        vx: rand(-280,280)*scale,
+        vy: rand(-280,280)*scale,
+        life: rand(0.25,0.75), // Längere Lebensdauer
+        r: rand(2.0, 6.0)*scale, // Größere Partikel
+        kind: 'spark',
+        hue: rand(0, 30), // Rot-Orange Bereich (0-30 Hue)
+        a: 1
+      });
+    }
+
+    // Mehrere Ringe für mehr Tiefe
+    this.particles.push({x,y, r: 10*scale, life: 0.4*scale, kind:'ring', a: 1});
+    this.particles.push({x,y, r: 6*scale, life: 0.25*scale, kind:'ring', a: 1});
+  }
+
   addTrail(x,y, vx,vy, hue=145, size=2){
     this.particles.push({
       x, y,
@@ -558,7 +579,7 @@ export class Game {
     if (this.player.inv > 0) return;
 
     this.player.inv = 0.55;
-    this.shake = Math.min(28, this.shake + 14);
+    this.shake = Math.min(28, this.shake + 7); // Reduziert von 14 auf 7 für weniger Screenshake
     this.hitstop = Math.min(0.09, this.hitstop + 0.03);
 
     let remaining = dmg;
@@ -732,7 +753,18 @@ export class Game {
 
       if (Math.hypot(b.x-this.player.x, b.y-this.player.y) < b.r + this.player.r){
         this.enemyBullets.splice(i,1);
+        // Explosion an der Projektil-Position
         this.addExplosion(b.x, b.y, 0.8, true);
+        
+        // Feuerartige Explosion direkt am Raumschiff (an der Einschlagstelle)
+        // Berechne die Einschlagstelle: Punkt auf der Linie zwischen Projektil und Spieler, näher am Spieler
+        const dx = this.player.x - b.x;
+        const dy = this.player.y - b.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const hitX = this.player.x - (dx / dist) * this.player.r * 0.8; // Etwas außerhalb des Spieler-Radius
+        const hitY = this.player.y - (dy / dist) * this.player.r * 0.8;
+        this.addFireExplosion(hitX, hitY, 1.2); // Größere, feuerartige Explosion
+        
         if (this.damagePlayer(b.dmg)) return true;
       }
     }

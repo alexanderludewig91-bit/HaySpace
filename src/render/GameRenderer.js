@@ -23,6 +23,174 @@ spaceshipImg.onerror = () => {
 // Pfad zum Bild (Vite serviert public-Ordner direkt)
 spaceshipImg.src = '/spaceship.png';
 
+// Drone Image laden
+let droneImage = null;
+let droneImageLoaded = false;
+
+const droneImg = new Image();
+droneImg.onload = () => {
+  droneImage = droneImg;
+  droneImageLoaded = true;
+};
+droneImg.onerror = () => {
+  console.warn('Drone image could not be loaded, falling back to default rendering');
+  droneImageLoaded = false;
+};
+// Pfad zum Bild (Vite serviert public-Ordner direkt)
+droneImg.src = '/drone.png';
+
+// Striker Image laden
+let strikerImage = null;
+let strikerImageLoaded = false;
+
+const strikerImg = new Image();
+strikerImg.onload = () => {
+  strikerImage = strikerImg;
+  strikerImageLoaded = true;
+};
+strikerImg.onerror = () => {
+  console.warn('Striker image could not be loaded, falling back to default rendering');
+  strikerImageLoaded = false;
+};
+// Pfad zum Bild (Vite serviert public-Ordner direkt)
+strikerImg.src = '/striker.png';
+
+// Tank Image laden
+let tankImage = null;
+let tankImageLoaded = false;
+
+const tankImg = new Image();
+tankImg.onload = () => {
+  tankImage = tankImg;
+  tankImageLoaded = true;
+};
+tankImg.onerror = () => {
+  console.warn('Tank image could not be loaded, falling back to default rendering');
+  tankImageLoaded = false;
+};
+// Pfad zum Bild (Vite serviert public-Ordner direkt)
+tankImg.src = '/tank.png';
+
+// Hunter Image laden
+let hunterImage = null;
+let hunterImageLoaded = false;
+
+const hunterImg = new Image();
+hunterImg.onload = () => {
+  hunterImage = hunterImg;
+  hunterImageLoaded = true;
+};
+hunterImg.onerror = () => {
+  console.warn('Hunter image could not be loaded, falling back to default rendering');
+  hunterImageLoaded = false;
+};
+hunterImg.src = '/hunter.png';
+
+// Crusher Image laden
+let crusherImage = null;
+let crusherImageLoaded = false;
+
+const crusherImg = new Image();
+crusherImg.onload = () => {
+  crusherImage = crusherImg;
+  crusherImageLoaded = true;
+};
+crusherImg.onerror = () => {
+  console.warn('Crusher image could not be loaded, falling back to default rendering');
+  crusherImageLoaded = false;
+};
+crusherImg.src = '/crusher.png';
+
+// Guardian Image laden
+let guardianImage = null;
+let guardianImageLoaded = false;
+
+const guardianImg = new Image();
+guardianImg.onload = () => {
+  guardianImage = guardianImg;
+  guardianImageLoaded = true;
+};
+guardianImg.onerror = () => {
+  console.warn('Guardian image could not be loaded, falling back to default rendering');
+  guardianImageLoaded = false;
+};
+guardianImg.src = '/guardian.png';
+
+// Destroyer Image laden
+let destroyerImage = null;
+let destroyerImageLoaded = false;
+
+const destroyerImg = new Image();
+destroyerImg.onload = () => {
+  destroyerImage = destroyerImg;
+  destroyerImageLoaded = true;
+};
+destroyerImg.onerror = () => {
+  console.warn('Destroyer image could not be loaded, falling back to default rendering');
+  destroyerImageLoaded = false;
+};
+destroyerImg.src = '/destroyer.png';
+
+// Reaper Image laden
+let reaperImage = null;
+let reaperImageLoaded = false;
+
+const reaperImg = new Image();
+reaperImg.onload = () => {
+  reaperImage = reaperImg;
+  reaperImageLoaded = true;
+};
+reaperImg.onerror = () => {
+  console.warn('Reaper image could not be loaded, falling back to default rendering');
+  reaperImageLoaded = false;
+};
+reaperImg.src = '/reaper.png';
+
+// Titan Image laden
+let titanImage = null;
+let titanImageLoaded = false;
+
+const titanImg = new Image();
+titanImg.onload = () => {
+  titanImage = titanImg;
+  titanImageLoaded = true;
+};
+titanImg.onerror = () => {
+  console.warn('Titan image could not be loaded, falling back to default rendering');
+  titanImageLoaded = false;
+};
+titanImg.src = '/titan.png';
+
+// Void Image laden
+let voidImage = null;
+let voidImageLoaded = false;
+
+const voidImg = new Image();
+voidImg.onload = () => {
+  voidImage = voidImg;
+  voidImageLoaded = true;
+};
+voidImg.onerror = () => {
+  console.warn('Void image could not be loaded, falling back to default rendering');
+  voidImageLoaded = false;
+};
+voidImg.src = '/void.png';
+
+// Apocalypse Image laden
+let apocalypseImage = null;
+let apocalypseImageLoaded = false;
+
+const apocalypseImg = new Image();
+apocalypseImg.onload = () => {
+  apocalypseImage = apocalypseImg;
+  apocalypseImageLoaded = true;
+};
+apocalypseImg.onerror = () => {
+  console.warn('Apocalypse image could not be loaded, falling back to default rendering');
+  apocalypseImageLoaded = false;
+};
+apocalypseImg.src = '/apocalypse.png';
+
 export function drawGlowCircle(ctx, x, y, r, color, a=1){
   ctx.save();
   ctx.globalAlpha = a;
@@ -195,31 +363,359 @@ export function drawEnemy(ctx, e, hardMode){
 
   // Farben basierend auf Gegner-Typ (hue aus e.hue)
   const hue = e.hue || 340;
-  const glowColor = `hsla(${hue}, 100%, 60%, ${e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' || e.kind==='reaper' || e.kind==='titan' || e.kind==='void' || e.kind==='apocalypse' ? 0.55 : 0.48})`;
-  drawGlowCircle(ctx, e.x, e.y, e.r*1.15, glowColor, 1);
+  
+  // Glow-Circle nur für Gegner ohne eigenes Bild zeichnen (alle Gegner mit eigenen Grafiken haben keinen Glow-Circle)
+  if (e.kind !== 'drone' && e.kind !== 'striker' && e.kind !== 'tank' && e.kind !== 'hunter' && e.kind !== 'crusher' && e.kind !== 'guardian' && e.kind !== 'destroyer' && e.kind !== 'reaper' && e.kind !== 'titan' && e.kind !== 'void' && e.kind !== 'apocalypse') {
+    const glowColor = `hsla(${hue}, 100%, 60%, 0.48)`;
+    drawGlowCircle(ctx, e.x, e.y, e.r*1.15, glowColor, 1);
+  }
 
   ctx.translate(e.x, e.y);
 
-  const body = ctx.createLinearGradient(0,-e.r, 0, e.r);
-  body.addColorStop(0,'rgba(255,255,255,0.85)');
-  body.addColorStop(1,`hsla(${hue}, 100%, 50%, 0.90)`);
+  // Wenn es ein Drone ist und das Bild geladen ist, verwende es
+  if (e.kind === 'drone' && droneImageLoaded && droneImage) {
+    // Keine Rotation für Drones - die Sinus-Bewegung ist bereits visuell interessant genug
+    // und eine zusätzliche Rotation würde die Bewegung zu pendelartig aussehen lassen
+    
+    // Bild-Größe: Fast so groß wie das eigene Raumschiff (120px) - etwa 100px
+    const targetHeight = 100; // Zielhöhe in Pixeln (fast so groß wie Raumschiff mit 120px)
+    const imageWidth = droneImage.width || 24;
+    const imageHeight = droneImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
 
-  ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
-  ctx.shadowBlur = 22;
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
 
-  ctx.fillStyle = body;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, e.r*1.05, e.r*0.85, 0, 0, Math.PI*2);
-  ctx.fill();
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
 
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(245,250,255,0.75)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(0, -e.r*0.18, e.r*0.65, e.r*0.45, 0, 0, Math.PI*2);
-  ctx.stroke();
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      droneImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'striker' && strikerImageLoaded && strikerImage) {
+    // Striker-Bild verwenden (genau wie Drone)
+    
+    // Bild-Größe: 10% größer als Drone - 110px
+    const targetHeight = 110; // Zielhöhe in Pixeln (10% größer als Drone mit 100px)
+    const imageWidth = strikerImage.width || 24;
+    const imageHeight = strikerImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
 
-  drawGlowCircle(ctx, e.r*0.22, -e.r*0.08, e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' || e.kind==='reaper' || e.kind==='titan' || e.kind==='void' || e.kind==='apocalypse'? 8 : 6, 'rgba(255,209,102,0.90)', 1);
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      strikerImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'tank' && tankImageLoaded && tankImage) {
+    // Tank-Bild verwenden (etwas größer als Striker)
+    
+    // Bild-Größe: Etwas größer als Striker (110px) - 120px
+    const targetHeight = 120; // Zielhöhe in Pixeln (etwas größer als Striker mit 110px)
+    const imageWidth = tankImage.width || 24;
+    const imageHeight = tankImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      tankImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'hunter' && hunterImageLoaded && hunterImage) {
+    // Hunter-Bild verwenden
+    
+    // Bild-Größe: Ähnlich wie Drone - 100px
+    const targetHeight = 100; // Zielhöhe in Pixeln
+    const imageWidth = hunterImage.width || 24;
+    const imageHeight = hunterImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      hunterImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'crusher' && crusherImageLoaded && crusherImage) {
+    // Crusher-Bild verwenden
+    
+    // Bild-Größe: Ähnlich wie Striker - 110px
+    const targetHeight = 110; // Zielhöhe in Pixeln
+    const imageWidth = crusherImage.width || 24;
+    const imageHeight = crusherImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      crusherImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'guardian' && guardianImageLoaded && guardianImage) {
+    // Guardian-Bild verwenden (größer als Tank)
+    
+    // Bild-Größe: Größer als Tank - 130px
+    const targetHeight = 130; // Zielhöhe in Pixeln (größer als Tank mit 120px)
+    const imageWidth = guardianImage.width || 24;
+    const imageHeight = guardianImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      guardianImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'destroyer' && destroyerImageLoaded && destroyerImage) {
+    // Destroyer-Bild verwenden (größer als Guardian)
+    
+    // Bild-Größe: Größer als Guardian - 140px
+    const targetHeight = 140; // Zielhöhe in Pixeln (größer als Guardian mit 130px)
+    const imageWidth = destroyerImage.width || 24;
+    const imageHeight = destroyerImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      destroyerImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'reaper' && reaperImageLoaded && reaperImage) {
+    // Reaper-Bild verwenden (größer als Destroyer)
+    
+    // Bild-Größe: Größer als Destroyer - 150px
+    const targetHeight = 150; // Zielhöhe in Pixeln (größer als Destroyer mit 140px)
+    const imageWidth = reaperImage.width || 24;
+    const imageHeight = reaperImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      reaperImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'titan' && titanImageLoaded && titanImage) {
+    // Titan-Bild verwenden (größer als Reaper)
+    
+    // Bild-Größe: Größer als Reaper - 160px
+    const targetHeight = 160; // Zielhöhe in Pixeln (größer als Reaper mit 150px)
+    const imageWidth = titanImage.width || 24;
+    const imageHeight = titanImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      titanImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'void' && voidImageLoaded && voidImage) {
+    // Void-Bild verwenden (größer als Titan)
+    
+    // Bild-Größe: Größer als Titan - 170px
+    const targetHeight = 170; // Zielhöhe in Pixeln (größer als Titan mit 160px)
+    const imageWidth = voidImage.width || 24;
+    const imageHeight = voidImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      voidImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else if (e.kind === 'apocalypse' && apocalypseImageLoaded && apocalypseImage) {
+    // Apocalypse-Bild verwenden (größer als Void)
+    
+    // Bild-Größe: Größer als Void - 180px
+    const targetHeight = 180; // Zielhöhe in Pixeln (größer als Void mit 170px)
+    const imageWidth = apocalypseImage.width || 24;
+    const imageHeight = apocalypseImage.height || 24;
+    const scale = targetHeight / imageHeight; // Skalierung basierend auf Höhe
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
+
+    // Schatten für das Bild
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) {
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // Bild zentriert zeichnen
+    ctx.drawImage(
+      apocalypseImage,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+  } else {
+    // Fallback: Original-Zeichnung für alle anderen Gegner oder wenn Bild nicht geladen
+    const body = ctx.createLinearGradient(0,-e.r, 0, e.r);
+    body.addColorStop(0,'rgba(255,255,255,0.85)');
+    body.addColorStop(1,`hsla(${hue}, 100%, 50%, 0.90)`);
+
+    ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.55)`;
+    ctx.shadowBlur = 22;
+
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, e.r*1.05, e.r*0.85, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(245,250,255,0.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, -e.r*0.18, e.r*0.65, e.r*0.45, 0, 0, Math.PI*2);
+    ctx.stroke();
+
+    drawGlowCircle(ctx, e.r*0.22, -e.r*0.08, e.kind==='tank' || e.kind==='guardian' || e.kind==='destroyer' || e.kind==='reaper' || e.kind==='titan' || e.kind==='void' || e.kind==='apocalypse'? 8 : 6, 'rgba(255,209,102,0.90)', 1);
+  }
 
   // HP-Bar für große Gegner
   if (e.kind === 'tank' || e.kind === 'guardian' || e.kind === 'destroyer' || 
