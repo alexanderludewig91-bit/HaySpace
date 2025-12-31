@@ -16,7 +16,7 @@ function ensureAudio() {
   return audioCtx;
 }
 
-function tone(freq, dur = 0.08, type = 'sine', gain = 0.05) {
+function tone(freq, dur = 0.08, type = 'sine', gain = 0.05, startOffset = 0) {
   const ac = ensureAudio();
   if (!ac) return;
   const o = ac.createOscillator();
@@ -27,7 +27,7 @@ function tone(freq, dur = 0.08, type = 'sine', gain = 0.05) {
   o.connect(g);
   g.connect(ac.destination);
 
-  const t0 = ac.currentTime;
+  const t0 = ac.currentTime + startOffset;
   // SFX-Lautstärke anwenden
   const adjustedGain = gain * sfxVolume;
   g.gain.setValueAtTime(0.0001, t0);
@@ -43,6 +43,26 @@ export function sfx(kind) {
   if (kind === 'shield') { tone(620, 0.07, 'sine', 0.05); tone(920, 0.08, 'sine', 0.04); return; }
   if (kind === 'upgrade') { tone(660, 0.06, 'triangle', 0.055); tone(900, 0.06, 'triangle', 0.055); tone(1240, 0.09, 'triangle', 0.055); return; }
   if (kind === 'hit') { tone(260, 0.06, 'square', 0.045); tone(180, 0.08, 'square', 0.040); return; }
+  if (kind === 'bossExplosion') {
+    // Mächtiger Explosionssound: Tiefer, bassiger Boom
+    const ac = ensureAudio();
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    
+    // Sehr tiefer, langer Bass-Boom (wie eine echte Explosion)
+    tone(40, 0.6, 'sine', 0.20, 0); // Sehr tiefer, langer Bass
+    tone(55, 0.5, 'sine', 0.18, 0); // Tiefer Bass
+    tone(70, 0.45, 'sine', 0.15, 0); // Mittlerer Bass
+    
+    // Kurzer, tiefer Knall (nicht schrill)
+    tone(80, 0.15, 'square', 0.12, 0.02);
+    tone(100, 0.12, 'square', 0.10, 0.02);
+    
+    // Tiefer Nachhall der ausklingt
+    tone(35, 0.8, 'sine', 0.12, 0.1);
+    tone(50, 0.7, 'sine', 0.10, 0.1);
+    tone(65, 0.6, 'sine', 0.08, 0.1);
+  }
 }
 
 // Intro-Musik initialisieren

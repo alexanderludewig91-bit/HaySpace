@@ -736,7 +736,15 @@ initDevMode(game, () => {
   resetLocalStorage();
   upgradeSystem.reset();
   game.unlockedLevels = [1];
-}, upgradeSystem);
+}, upgradeSystem, startLevel, {
+  game,
+  upgradeSystem,
+  gamepad,
+  DOM,
+  hardMode,
+  setLevelCompleteDelayStarted,
+  setLevelCompleteTime
+});
 
 // Resize-Handler für Hangar-Layout (aktualisiert max-width bei Fenstergrößenänderung und Zoom)
 let resizeTimeout;

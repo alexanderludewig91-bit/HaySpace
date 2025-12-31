@@ -1,7 +1,7 @@
 import { ensureAudio } from '../systems/AudioSystem.js';
 import { drawEnemy } from '../render/GameRenderer.js';
 
-export function initDevMode(game, resetLocalStorage, upgradeSystem = null) {
+export function initDevMode(game, resetLocalStorage, upgradeSystem = null, startLevelFn = null, dependencies = null) {
   // DOM Elements
   const devModeBtn = document.getElementById('devModeBtn');
   const devModePanel = document.getElementById('devModePanel');
@@ -85,6 +85,8 @@ export function initDevMode(game, resetLocalStorage, upgradeSystem = null) {
   const devSaveInfo = document.getElementById('devSaveInfo');
   const devSaveContent = document.getElementById('devSaveContent');
   const devEnemyTableBody = document.getElementById('devEnemyTableBody');
+  const devBossWaveLevel1 = document.getElementById('devBossWaveLevel1');
+  const devBossWaveLevel2 = document.getElementById('devBossWaveLevel2');
   
   // Referenzen zu anderen Elementen
   const overlay = document.getElementById('overlay');
@@ -219,6 +221,44 @@ export function initDevMode(game, resetLocalStorage, upgradeSystem = null) {
       updateLocalStorageDisplay();
     } else {
       alert('UpgradeSystem nicht verfügbar!');
+    }
+  });
+
+  // Boss Wave Level 1 Button
+  devBossWaveLevel1.addEventListener('click', () => {
+    if (startLevelFn && dependencies) {
+      // Level 1 starten
+      startLevelFn(1, dependencies);
+      // Wave auf Boss-Welle setzen (5 + currentLevel = 5 + 1 = 6)
+      game.wave = 6;
+      // Alle Gegner löschen
+      game.enemies = [];
+      // Boss spawnen
+      game.spawnBoss();
+      // Dev-Menü schließen
+      devModePanel.classList.add('hidden');
+      alert('Boss Wave Level 1 gestartet!');
+    } else {
+      alert('startLevel Funktion nicht verfügbar!');
+    }
+  });
+
+  // Boss Wave Level 2 Button
+  devBossWaveLevel2.addEventListener('click', () => {
+    if (startLevelFn && dependencies) {
+      // Level 2 starten
+      startLevelFn(2, dependencies);
+      // Wave auf Boss-Welle setzen (5 + currentLevel = 5 + 2 = 7)
+      game.wave = 7;
+      // Alle Gegner löschen
+      game.enemies = [];
+      // Boss spawnen
+      game.spawnBoss();
+      // Dev-Menü schließen
+      devModePanel.classList.add('hidden');
+      alert('Boss Wave Level 2 gestartet!');
+    } else {
+      alert('startLevel Funktion nicht verfügbar!');
     }
   });
 

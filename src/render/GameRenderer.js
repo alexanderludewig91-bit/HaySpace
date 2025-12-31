@@ -191,6 +191,51 @@ apocalypseImg.onerror = () => {
 };
 apocalypseImg.src = '/apocalypse.png';
 
+// Boss Core 1 Image laden
+let bossCore1Image = null;
+let bossCore1ImageLoaded = false;
+
+const bossCore1Img = new Image();
+bossCore1Img.onload = () => {
+  bossCore1Image = bossCore1Img;
+  bossCore1ImageLoaded = true;
+};
+bossCore1Img.onerror = () => {
+  console.warn('Boss Core 1 image could not be loaded, falling back to default rendering');
+  bossCore1ImageLoaded = false;
+};
+bossCore1Img.src = '/boss_core1.png';
+
+// Boss Core 2 Image laden
+let bossCore2Image = null;
+let bossCore2ImageLoaded = false;
+
+const bossCore2Img = new Image();
+bossCore2Img.onload = () => {
+  bossCore2Image = bossCore2Img;
+  bossCore2ImageLoaded = true;
+};
+bossCore2Img.onerror = () => {
+  console.warn('Boss Core 2 image could not be loaded, falling back to default rendering');
+  bossCore2ImageLoaded = false;
+};
+bossCore2Img.src = '/boss_core2.png';
+
+// Boss Core 2 Ring Image laden
+let bossCore2RingImage = null;
+let bossCore2RingImageLoaded = false;
+
+const bossCore2RingImg = new Image();
+bossCore2RingImg.onload = () => {
+  bossCore2RingImage = bossCore2RingImg;
+  bossCore2RingImageLoaded = true;
+};
+bossCore2RingImg.onerror = () => {
+  console.warn('Boss Core 2 Ring image could not be loaded');
+  bossCore2RingImageLoaded = false;
+};
+bossCore2RingImg.src = '/boss_core2_ring.png';
+
 export function drawGlowCircle(ctx, x, y, r, color, a=1){
   ctx.save();
   ctx.globalAlpha = a;
@@ -748,93 +793,243 @@ export function drawBoss(ctx, b){
   const level = b.level || 1;
   
   if (level === 1) {
-    // Level 1 Boss: Rechteckiges Design (Original)
-    drawGlowCircle(ctx, b.x, b.y, b.r*1.55, 'rgba(255,59,107,0.45)', 1);
-    drawGlowCircle(ctx, b.x, b.y, b.r*1.15, 'rgba(255,59,107,0.45)', 1);
-
+    // Level 1 Boss: Eigene Grafik verwenden
     ctx.translate(b.x, b.y);
 
-    const shell = ctx.createLinearGradient(0,-b.r, 0, b.r);
-    shell.addColorStop(0,'rgba(245,250,255,0.85)');
-    shell.addColorStop(1,'rgba(255,59,107,0.90)');
+    if (bossCore1ImageLoaded && bossCore1Image) {
+      // Bild-Größe: Basierend auf Boss-Radius (58px) -> Durchmesser 116px
+      // 50% größer für bessere Sichtbarkeit
+      const targetSize = b.r * 2 * 1.5; // Durchmesser basierend auf Radius, 50% größer
+      const imageWidth = bossCore1Image.width || 116;
+      const imageHeight = bossCore1Image.height || 116;
+      const scale = targetSize / Math.max(imageWidth, imageHeight);
+      const drawWidth = imageWidth * scale;
+      const drawHeight = imageHeight * scale;
 
-    ctx.shadowColor = 'rgba(255,59,107,0.55)';
-    ctx.shadowBlur = 28;
-    ctx.fillStyle = shell;
-    ctx.beginPath();
-    ctx.roundRect(-b.r*1.05, -b.r*0.70, b.r*2.10, b.r*1.40, 38);
-    ctx.fill();
+      // Schatten für das Bild
+      ctx.shadowColor = 'rgba(255,59,107,0.55)';
+      ctx.shadowBlur = 28;
 
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = 'rgba(245,250,255,0.45)';
-    ctx.beginPath();
-    ctx.roundRect(-b.r*1.40, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
-    ctx.roundRect(b.r*0.88, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
-    ctx.fill();
+      // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+      ctx.imageSmoothingEnabled = true;
+      if (ctx.imageSmoothingQuality) {
+        ctx.imageSmoothingQuality = 'high';
+      }
 
-    ctx.shadowBlur = 0;
-    drawGlowCircle(ctx, 0, 0, 22, 'rgba(255,209,102,0.90)', 1);
-    drawGlowCircle(ctx, 0, 0, 10, 'rgba(0,0,0,0.25)', 1);
+      // Bild zentriert zeichnen
+      ctx.drawImage(
+        bossCore1Image,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight
+      );
+      
+      // HP-Ring NICHT zeichnen, wenn Bild geladen ist (Ring ist in der Grafik enthalten)
+    } else {
+      // Fallback: Original-Zeichnung wenn Bild nicht geladen
+      drawGlowCircle(ctx, 0, 0, b.r*1.55, 'rgba(255,59,107,0.45)', 1);
+      drawGlowCircle(ctx, 0, 0, b.r*1.15, 'rgba(255,59,107,0.45)', 1);
 
-    const hpRatio = b.hp/b.hpMax;
-    const pulse = 0.4 + 0.6*Math.sin(b.t*6);
-    ctx.strokeStyle = `rgba(108,255,154,${0.18 + (1-hpRatio)*0.18 + pulse*0.08})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, b.r*0.72, 0, Math.PI*2);
-    ctx.stroke();
+      const shell = ctx.createLinearGradient(0,-b.r, 0, b.r);
+      shell.addColorStop(0,'rgba(245,250,255,0.85)');
+      shell.addColorStop(1,'rgba(255,59,107,0.90)');
+
+      ctx.shadowColor = 'rgba(255,59,107,0.55)';
+      ctx.shadowBlur = 28;
+      ctx.fillStyle = shell;
+      ctx.beginPath();
+      ctx.roundRect(-b.r*1.05, -b.r*0.70, b.r*2.10, b.r*1.40, 38);
+      ctx.fill();
+
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = 'rgba(245,250,255,0.45)';
+      ctx.beginPath();
+      ctx.roundRect(-b.r*1.40, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
+      ctx.roundRect(b.r*0.88, -b.r*0.22, b.r*0.52, b.r*0.44, 26);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      drawGlowCircle(ctx, 0, 0, 22, 'rgba(255,209,102,0.90)', 1);
+      drawGlowCircle(ctx, 0, 0, 10, 'rgba(0,0,0,0.25)', 1);
+      
+      // HP-Ring für Fallback-Zeichnung
+      const hpRatio = b.hp/b.hpMax;
+      const pulse = 0.4 + 0.6*Math.sin(b.t*6);
+      ctx.strokeStyle = `rgba(108,255,154,${0.18 + (1-hpRatio)*0.18 + pulse*0.08})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r*0.72, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    // HP-Ring wird NICHT gezeichnet, wenn das Bild geladen ist (Ring ist in der Grafik enthalten)
   } else if (level === 2) {
-    // Level 2 Boss: Hexagonales/Sechseckiges Design mit mehr Details
-    drawGlowCircle(ctx, b.x, b.y, b.r*1.6, 'rgba(200,50,255,0.45)', 1);
-    drawGlowCircle(ctx, b.x, b.y, b.r*1.2, 'rgba(150,100,255,0.45)', 1);
-
+    // Level 2 Boss: Eigene Grafik verwenden
     ctx.translate(b.x, b.y);
-    ctx.rotate(b.t * 0.3); // Langsame Rotation
+    // Rotation entfernt - Bild bleibt statisch
 
-    // Hauptkörper: Hexagon
-    const shell = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r);
-    shell.addColorStop(0,'rgba(245,250,255,0.90)');
-    shell.addColorStop(0.5,'rgba(200,50,255,0.85)');
-    shell.addColorStop(1,'rgba(100,0,200,0.90)');
+    if (bossCore2ImageLoaded && bossCore2Image) {
+      // Bild-Größe: Basierend auf Boss-Radius (58px) -> Durchmesser 116px
+      // 50% größer + 10% zusätzlich = 65% größer als Radius
+      const targetSize = b.r * 2 * 1.65; // Durchmesser basierend auf Radius, 65% größer (50% + 10%)
+      const imageWidth = bossCore2Image.width || 116;
+      const imageHeight = bossCore2Image.height || 116;
+      const scale = targetSize / Math.max(imageWidth, imageHeight);
+      const drawWidth = imageWidth * scale;
+      const drawHeight = imageHeight * scale;
 
-    ctx.shadowColor = 'rgba(200,50,255,0.60)';
-    ctx.shadowBlur = 32;
-    ctx.fillStyle = shell;
-    ctx.beginPath();
-    // Hexagon zeichnen
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI / 3) * i - Math.PI / 2;
-      const x = Math.cos(angle) * b.r;
-      const y = Math.sin(angle) * b.r;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      // Schatten für das Bild
+      ctx.shadowColor = 'rgba(200,50,255,0.60)';
+      ctx.shadowBlur = 32;
+
+      // Stelle sicher, dass Image Smoothing aktiviert ist für beste Qualität
+      ctx.imageSmoothingEnabled = true;
+      if (ctx.imageSmoothingQuality) {
+        ctx.imageSmoothingQuality = 'high';
+      }
+
+      // Bild zentriert zeichnen
+      ctx.drawImage(
+        bossCore2Image,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight
+      );
+      
+      // Pulsierender und schwingender Ring über dem Hauptbild
+      if (bossCore2RingImageLoaded && bossCore2RingImage) {
+        ctx.save();
+        
+        // Leichte Schwingung: ±15° (0.26 Radiant) hin und her
+        const swingAngle = Math.sin(b.t * 2) * 0.26; // ±15 Grad
+        ctx.rotate(swingAngle);
+        
+        // Pulsieren: Größe variiert leicht (5% Variation)
+        const pulse = 1.0 + Math.sin(b.t * 4) * 0.05; // ±5% Größenänderung
+        
+        // Ring-Bild größer als Hauptbild (50% größer) mit Pulsieren
+        const ringWidth = bossCore2RingImage.width || imageWidth;
+        const ringHeight = bossCore2RingImage.height || imageHeight;
+        const baseRingScale = (targetSize / Math.max(ringWidth, ringHeight)) * 1.5; // 50% größer
+        const ringScale = baseRingScale * pulse; // Mit Pulsieren
+        const ringDrawWidth = ringWidth * ringScale;
+        const ringDrawHeight = ringHeight * ringScale;
+        
+        // Berechne Ring-Radius für Glow-Punkte (vor dem Zeichnen des Rings)
+        const ringRadius = Math.max(ringDrawWidth, ringDrawHeight) / 2 * 0.7; // 30% kleinerer Radius
+        const glowCount = 12; // Anzahl der Glow-Punkte
+        const glowPulse = 0.7 + Math.sin(b.t * 6) * 0.3; // Stärkeres Pulsieren der Glows (0.4 bis 1.0)
+        
+        // Speichere Positionen der Glow-Punkte für Laser-Verbindungen
+        const glowPositions = [];
+        
+        // Zuerst Glow-Punkte und Laser zeichnen (unter dem Ring)
+        for (let i = 0; i < glowCount; i++) {
+          const angle = (i / glowCount) * Math.PI * 2 + b.t * 1.5; // Langsame Rotation um den Ring
+          const glowX = Math.cos(angle) * ringRadius;
+          const glowY = Math.sin(angle) * ringRadius;
+          
+          glowPositions.push({ x: glowX, y: glowY });
+          
+          // Größe variiert stärker für dynamischeren Effekt
+          const glowSize = (10 + Math.sin(b.t * 4 + i) * 3) * glowPulse;
+          const glowAlpha = 0.7 + Math.sin(b.t * 5 + i * 0.5) * 0.3; // Heller (0.4 bis 1.0)
+          
+          // Lila/magenta Glow für Level 2 Boss - heller und stärker pulsierend
+          drawGlowCircle(ctx, glowX, glowY, glowSize, `rgba(200,50,255,${glowAlpha})`, 1);
+          drawGlowCircle(ctx, glowX, glowY, glowSize * 0.6, `rgba(255,150,255,${glowAlpha * 0.9})`, 1);
+        }
+        
+        // Pulsierende Laser-Linien zwischen benachbarten Punkten - stärker und heller
+        const laserPulse = 0.5 + Math.sin(b.t * 8) * 0.4; // Stärkeres Pulsieren (0.1 bis 0.9)
+        ctx.save();
+        ctx.globalAlpha = laserPulse;
+        ctx.strokeStyle = 'rgba(220,80,255,1.0)'; // Heller
+        ctx.lineWidth = 2.5; // Etwas dicker
+        ctx.shadowColor = 'rgba(220,80,255,1.0)'; // Heller
+        ctx.shadowBlur = 12; // Stärkerer Glow
+        
+        for (let i = 0; i < glowCount; i++) {
+          const current = glowPositions[i];
+          const next = glowPositions[(i + 1) % glowCount]; // Nächster Punkt (zurück zum ersten)
+          
+          ctx.beginPath();
+          ctx.moveTo(current.x, current.y);
+          ctx.lineTo(next.x, next.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+        
+        // Jetzt Ring-Bild darüber zeichnen (zuletzt, damit es über Glows und Lasern liegt)
+        ctx.imageSmoothingEnabled = true;
+        if (ctx.imageSmoothingQuality) {
+          ctx.imageSmoothingQuality = 'high';
+        }
+        
+        ctx.drawImage(
+          bossCore2RingImage,
+          -ringDrawWidth / 2,
+          -ringDrawHeight / 2,
+          ringDrawWidth,
+          ringDrawHeight
+        );
+        
+        ctx.restore();
+      }
+      
+      // HP-Ring NICHT zeichnen, wenn Bild geladen ist (Ring ist in der Grafik enthalten)
+    } else {
+      // Fallback: Original-Zeichnung wenn Bild nicht geladen
+      drawGlowCircle(ctx, 0, 0, b.r*1.6, 'rgba(200,50,255,0.45)', 1);
+      drawGlowCircle(ctx, 0, 0, b.r*1.2, 'rgba(150,100,255,0.45)', 1);
+
+      // Hauptkörper: Hexagon
+      const shell = ctx.createRadialGradient(0, 0, 0, 0, 0, b.r);
+      shell.addColorStop(0,'rgba(245,250,255,0.90)');
+      shell.addColorStop(0.5,'rgba(200,50,255,0.85)');
+      shell.addColorStop(1,'rgba(100,0,200,0.90)');
+
+      ctx.shadowColor = 'rgba(200,50,255,0.60)';
+      ctx.shadowBlur = 32;
+      ctx.fillStyle = shell;
+      ctx.beginPath();
+      // Hexagon zeichnen
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 2;
+        const x = Math.cos(angle) * b.r;
+        const y = Math.sin(angle) * b.r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Zusätzliche Details: Eckpunkte
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = 'rgba(255,209,102,0.75)';
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 2;
+        const x = Math.cos(angle) * b.r * 1.1;
+        const y = Math.sin(angle) * b.r * 1.1;
+        drawGlowCircle(ctx, x, y, 8, 'rgba(255,209,102,0.90)', 1);
+      }
+
+      // Zentrum
+      ctx.shadowBlur = 0;
+      drawGlowCircle(ctx, 0, 0, 24, 'rgba(200,50,255,0.90)', 1);
+      drawGlowCircle(ctx, 0, 0, 12, 'rgba(0,0,0,0.30)', 1);
+      
+      // HP-Ring für Fallback-Zeichnung
+      const hpRatio = b.hp/b.hpMax;
+      const pulse = 0.4 + 0.6*Math.sin(b.t*8);
+      ctx.strokeStyle = `rgba(108,255,154,${0.20 + (1-hpRatio)*0.20 + pulse*0.10})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r*0.75, 0, Math.PI*2);
+      ctx.stroke();
     }
-    ctx.closePath();
-    ctx.fill();
-
-    // Zusätzliche Details: Eckpunkte
-    ctx.shadowBlur = 20;
-    ctx.fillStyle = 'rgba(255,209,102,0.75)';
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI / 3) * i - Math.PI / 2;
-      const x = Math.cos(angle) * b.r * 1.1;
-      const y = Math.sin(angle) * b.r * 1.1;
-      drawGlowCircle(ctx, x, y, 8, 'rgba(255,209,102,0.90)', 1);
-    }
-
-    // Zentrum
-    ctx.shadowBlur = 0;
-    drawGlowCircle(ctx, 0, 0, 24, 'rgba(200,50,255,0.90)', 1);
-    drawGlowCircle(ctx, 0, 0, 12, 'rgba(0,0,0,0.30)', 1);
-
-    // HP-Ring
-    const hpRatio = b.hp/b.hpMax;
-    const pulse = 0.4 + 0.6*Math.sin(b.t*8);
-    ctx.strokeStyle = `rgba(108,255,154,${0.20 + (1-hpRatio)*0.20 + pulse*0.10})`;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, 0, b.r*0.75, 0, Math.PI*2);
-    ctx.stroke();
+    // HP-Ring wird NICHT gezeichnet, wenn das Bild geladen ist (Ring ist in der Grafik enthalten)
   } else if (level === 3) {
     // Level 3 Boss: Komplexes Design mit mehreren Segmenten und Spikes
     drawGlowCircle(ctx, b.x, b.y, b.r*1.7, 'rgba(255,100,0,0.50)', 1);
@@ -1071,18 +1266,49 @@ export function drawBoss(ctx, b){
   ctx.restore();
 }
 
-export function drawBullet(ctx, b, friendly){
-  const col = friendly ? 'rgba(108,255,154,0.85)' : 'rgba(255,59,107,0.75)';
-  drawGlowCircle(ctx, b.x, b.y, b.r, col, 1);
-  ctx.save();
-  ctx.globalAlpha = friendly ? 0.5 : 0.45;
-  ctx.strokeStyle = col;
-  ctx.lineWidth = friendly ? 3 : 3;
-  ctx.beginPath();
-  ctx.moveTo(b.x, b.y);
-  ctx.lineTo(b.x - b.vx*0.02, b.y - b.vy*0.02);
-  ctx.stroke();
-  ctx.restore();
+export function drawBullet(ctx, b, friendly, time = 0){
+  // Boss-Schüsse (Level 2+) bekommen spezielles Rendering
+  if (!friendly && b.isBoss && b.bossLevel >= 2) {
+    // Pulsierender Effekt basierend auf Zeit
+    const pulse = 0.8 + Math.sin(time * 8) * 0.2; // Pulsation zwischen 0.6 und 1.0
+    
+    // Lila/Magenta-Farbschema passend zum Level 2 Boss
+    const outerGlow = `rgba(200,50,255,${0.6 * pulse})`;
+    const middleGlow = `rgba(220,80,255,${0.8 * pulse})`;
+    const innerGlow = `rgba(255,150,255,${1.0 * pulse})`;
+    
+    // Mehrschichtiger Glow-Effekt
+    const baseSize = b.r;
+    drawGlowCircle(ctx, b.x, b.y, baseSize * 1.8, outerGlow, 1); // Äußerer Glow
+    drawGlowCircle(ctx, b.x, b.y, baseSize * 1.3, middleGlow, 1); // Mittlerer Ring
+    drawGlowCircle(ctx, b.x, b.y, baseSize * 0.9, innerGlow, 1); // Innerer Kern
+    
+    // Pulsierender Trail
+    ctx.save();
+    ctx.globalAlpha = 0.6 * pulse;
+    ctx.strokeStyle = `rgba(220,80,255,${0.9 * pulse})`;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = 'rgba(200,50,255,0.9)';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - b.vx*0.03, b.y - b.vy*0.03);
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    // Normale Schüsse (Spieler oder normale Gegner)
+    const col = friendly ? 'rgba(108,255,154,0.85)' : 'rgba(255,59,107,0.75)';
+    drawGlowCircle(ctx, b.x, b.y, b.r, col, 1);
+    ctx.save();
+    ctx.globalAlpha = friendly ? 0.5 : 0.45;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = friendly ? 3 : 3;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - b.vx*0.02, b.y - b.vy*0.02);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 export function drawPickup(ctx, p){
@@ -1112,7 +1338,7 @@ export function drawPickup(ctx, p){
   ctx.restore();
 }
 
-export function drawParticle(ctx, p){
+export function drawParticle(ctx, p, game = null){
   const t = clamp(p.life, 0, 1);
   const a = clamp(p.life/0.6, 0, 1) * (p.a ?? 1);
 
@@ -1128,17 +1354,58 @@ export function drawParticle(ctx, p){
 
   if (p.kind === 'ring'){
     ctx.save();
-    ctx.globalAlpha = 0.25*a;
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-    ctx.stroke();
+    // Für große Ringe (Boss-Explosion): Helles, blendendes Licht mit rot-orange Anteilen
+    // Für kleine Ringe: Normale Transparenz
+    const isLargeRing = p.r > 50;
+    if (isLargeRing) {
+      // Blendendes rot-orange-gelbes Licht für große Explosionsringe mit Flackern
+      const intensity = Math.min(1.0, p.a || 1.0);
+      const flicker = 0.9 + Math.sin(p.life * 20) * 0.1; // Flackern-Effekt
+      
+      // Äußerer Glow - rot-orange
+      ctx.globalAlpha = 0.5 * a * intensity * flicker;
+      ctx.strokeStyle = 'rgba(255,150,50,1.0)'; // Rot-orange
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.stroke();
+      
+      // Mittlerer Ring - heller rot-orange
+      ctx.globalAlpha = 0.7 * a * intensity * flicker;
+      ctx.strokeStyle = 'rgba(255,200,100,1.0)'; // Heller rot-orange
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 0.92, 0, Math.PI*2);
+      ctx.stroke();
+      
+      // Innerer heller Ring - gelb-weiß
+      ctx.globalAlpha = 0.8 * a * intensity * flicker;
+      ctx.strokeStyle = 'rgba(255,255,180,1.0)'; // Gelb-weiß
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 0.85, 0, Math.PI*2);
+      ctx.stroke();
+      
+      // Zentrales blendendes Licht - rot-orange-gelb
+      ctx.globalAlpha = 0.9 * a * intensity * flicker;
+      drawGlowCircle(ctx, p.x, p.y, p.r * 0.3, 'rgba(255,180,80,1.0)', 1); // Rot-orange Glow
+      ctx.globalAlpha = 0.7 * a * intensity * flicker;
+      drawGlowCircle(ctx, p.x, p.y, p.r * 0.2, 'rgba(255,255,200,1.0)', 1); // Gelb-weiß Glow
+    } else {
+      // Normale Ringe für kleine Explosionen
+      ctx.globalAlpha = 0.25*a;
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.stroke();
+    }
     ctx.restore();
     return;
   }
 
   if (p.kind === 'beamCharge'){
+    // Level 1 Boss: Original gelb/orange
     ctx.save();
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = 'rgba(255,209,102,0.8)';
@@ -1155,6 +1422,7 @@ export function drawParticle(ctx, p){
   }
 
   if (p.kind === 'beam'){
+    // Level 1 Boss: Original rot
     ctx.save();
     ctx.globalAlpha = 0.25;
     ctx.fillStyle = 'rgba(255,59,107,0.85)';
@@ -1205,14 +1473,14 @@ export function render(ctx, game){
   for (const e of game.enemies) drawEnemy(ctx, e, game.hardMode);
   if (game.boss) drawBoss(ctx, game.boss);
 
-  for (const b of game.bullets) drawBullet(ctx, b, true);
-  for (const b of game.enemyBullets) drawBullet(ctx, b, false);
+  for (const b of game.bullets) drawBullet(ctx, b, true, game.time);
+  for (const b of game.enemyBullets) drawBullet(ctx, b, false, game.time);
 
   for (const p of game.pickups) drawPickup(ctx, p);
 
   drawPlayer(ctx, game.player, game.time);
 
-  for (const p of game.particles) drawParticle(ctx, p);
+  for (const p of game.particles) drawParticle(ctx, p, game);
 
   for (const pp of game.popups) drawPopup(ctx, pp);
 

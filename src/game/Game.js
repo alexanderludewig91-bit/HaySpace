@@ -453,6 +453,79 @@ export class Game {
     this.particles.push({x,y, r: 6*scale, life: 0.25*scale, kind:'ring', a: 1});
   }
 
+  addBossExplosion(x, y){
+    // Massive Boss-Explosion mit blendendem Licht und großer Welle
+    // Starker Screenshake und Hitstop
+    this.shake = Math.min(35, this.shake + 25);
+    this.hitstop = Math.min(0.15, this.hitstop + 0.12);
+    
+    // Mächtiger Explosionssound
+    sfx('bossExplosion');
+
+    // Sehr viele Partikel für intensive Explosion - mehr rote Anteile
+    const n = 150; // Noch mehr Partikel
+    for (let i=0;i<n;i++){
+      // Mehr rote Partikel (0-30 Hue = rot-orange)
+      const hue = Math.random() < 0.7 ? rand(0, 30) : rand(0, 60); // 70% rot-orange, 30% rot-orange-gelb
+      this.particles.push({
+        x, y,
+        vx: rand(-400,400),
+        vy: rand(-400,400),
+        life: rand(0.4,1.0), // Längere Lebensdauer
+        r: rand(3.0, 8.0), // Größere Partikel
+        kind: 'spark',
+        hue: hue,
+        a: 1
+      });
+    }
+
+    // Massive Explosionsringe - mehrere konzentrische Ringe mit Flackern
+    // Großer äußerer Ring (Explosionswelle) - mit variierender Alpha für Flackern
+    this.particles.push({x,y, r: 200, life: 0.8, kind:'ring', a: rand(0.8, 1.0)});
+    this.particles.push({x,y, r: 180, life: 0.75, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 150, life: 0.6, kind:'ring', a: rand(0.8, 1.0)});
+    this.particles.push({x,y, r: 120, life: 0.55, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 100, life: 0.5, kind:'ring', a: rand(0.8, 1.0)});
+    this.particles.push({x,y, r: 80, life: 0.45, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 60, life: 0.4, kind:'ring', a: rand(0.8, 1.0)});
+    this.particles.push({x,y, r: 40, life: 0.35, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 30, life: 0.3, kind:'ring', a: rand(0.8, 1.0)});
+
+    // Blendendes zentrales Licht mit Flackern
+    this.particles.push({x,y, r: 90, life: 0.5, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 80, life: 0.5, kind:'ring', a: rand(0.9, 1.0)});
+    this.particles.push({x,y, r: 70, life: 0.45, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 50, life: 0.4, kind:'ring', a: rand(0.9, 1.0)});
+    this.particles.push({x,y, r: 35, life: 0.35, kind:'ring', a: rand(0.85, 1.0)});
+    this.particles.push({x,y, r: 25, life: 0.3, kind:'ring', a: rand(0.9, 1.0)});
+    this.particles.push({x,y, r: 15, life: 0.25, kind:'ring', a: rand(0.85, 1.0)});
+
+    // Zusätzliche kleine Explosionen in der Nähe für mehr Chaos - mehr rote Anteile
+    for (let k=0;k<25;k++){ // Mehr kleine Explosionen
+      const offsetX = rand(-120,120);
+      const offsetY = rand(-100,100);
+      const smallScale = rand(0.8, 1.5);
+      const smallN = 18; // Mehr Partikel pro kleiner Explosion
+      for (let i=0;i<smallN;i++){
+        // Mehr rote Partikel in kleinen Explosionen
+        const hue = Math.random() < 0.75 ? rand(0, 25) : rand(0, 50);
+        this.particles.push({
+          x: x + offsetX,
+          y: y + offsetY,
+          vx: rand(-200,200)*smallScale,
+          vy: rand(-200,200)*smallScale,
+          life: rand(0.3,0.7),
+          r: rand(2.0, 5.0)*smallScale,
+          kind: 'spark',
+          hue: hue,
+          a: 1
+        });
+      }
+      // Ringe mit variierender Alpha für Flackern
+      this.particles.push({x: x + offsetX, y: y + offsetY, r: 15*smallScale, life: 0.4*smallScale, kind:'ring', a: rand(0.8, 1.0)});
+    }
+  }
+
   addTrail(x,y, vx,vy, hue=145, size=2){
     this.particles.push({
       x, y,
@@ -559,7 +632,7 @@ export class Game {
         x: this.boss.x, y: this.boss.y,
         vx: Math.cos(ang)*baseSpeed,
         vy: Math.sin(ang)*baseSpeed,
-        r: 5, dmg: this.hardMode?16:12, life: 6, hue: 350
+        r: 7, dmg: this.hardMode?16:12, life: 6, hue: 350, isBoss: true, bossLevel: this.boss.level
       });
     }
 
@@ -570,7 +643,7 @@ export class Game {
         const ax = (this.player.x - this.boss.x) + rand(-40,40);
         const ay = (this.player.y - this.boss.y) + rand(-40,40);
         const len = Math.hypot(ax,ay) || 1;
-        this.enemyBullets.push({x:this.boss.x, y:this.boss.y, vx: ax/len*speed, vy: ay/len*speed, r: 5, dmg: this.hardMode?18:14, life: 6, hue: 350});
+        this.enemyBullets.push({x:this.boss.x, y:this.boss.y, vx: ax/len*speed, vy: ay/len*speed, r: 7, dmg: this.hardMode?18:14, life: 6, hue: 350, isBoss: true, bossLevel: this.boss.level});
       }
     }
   }
@@ -805,8 +878,8 @@ export class Game {
         this.bullets.splice(i,1);
         hit = true;
         if (this.boss.hp <= 0){
-          this.addExplosion(this.boss.x,this.boss.y, 2.6);
-          for (let k=0;k<14;k++) this.addExplosion(this.boss.x+rand(-90,90), this.boss.y+rand(-70,70), 1.1);
+          // Massive Boss-Explosion mit blendendem Licht und großer Welle
+          this.addBossExplosion(this.boss.x, this.boss.y);
           this.boss = null;
           // Level-Ende: Nächstes Level freischalten
           if (this.currentLevel < 5) {
@@ -889,6 +962,7 @@ export class Game {
           const cycle = this.hardMode ? 6.0 : 7.2;
           if (this.boss.rage > cycle){
             this.boss.rage = 0;
+            // Level 1 Boss: Original statischer Laser
             const beamX = this.player.x;
             this.addPopup('WARNING', beamX, 220, 0.6, 'warn');
             this.particles.push({x: beamX, y: 0, w: this.hardMode ? 34 : 42, life: this.hardMode ? 0.45 : 0.55, kind:'beamCharge', a: 1, onDone: () => {
@@ -912,13 +986,59 @@ export class Game {
       p.life -= dt;
       p.x += (p.vx||0)*dt;
       p.y += (p.vy||0)*dt;
+      
+      // Kollisionserkennung für gezielten Laser (Level 2+)
+      if (p.kind === 'beam' && p.bossLevel >= 2) {
+        // Laser fliegt in Richtung Spieler - prüfe Kollision
+        const beamRadius = p.w * 0.5;
+        
+        // Prüfe Kollision mit Spieler
+        const distToPlayer = Math.hypot(this.player.x - p.x, this.player.y - p.y);
+        if (distToPlayer < beamRadius + this.player.r) {
+          // Nur einmal pro Frame Schaden verursachen (verhindere Multi-Hit)
+          if (!p.hitPlayer) {
+            p.hitPlayer = true;
+            this.damagePlayer(this.hardMode ? 55 : 45);
+            // Sparks beim Einschlag
+            const sparkCount = 60; // Mehr Sparks für Level 2+
+            for (let j=0;j<sparkCount;j++){
+              this.particles.push({
+                x: p.x+rand(-60,60), 
+                y: p.y+rand(-30,30), 
+                vx: rand(-340,340), 
+                vy: rand(-350,350), 
+                life: rand(0.18,0.45), 
+                r: rand(1.4,4.2), 
+                kind:'spark', 
+                hue: 280, // Lila/Magenta für Level 2+
+                a: 1
+              });
+            }
+            // Laser entfernen nach Treffer
+            this.particles.splice(i,1);
+            continue;
+          }
+        } else {
+          // Reset hit flag wenn Spieler nicht mehr im Bereich ist
+          p.hitPlayer = false;
+        }
+        
+        // Laser entfernen wenn er außerhalb des Bildschirms ist
+        if (p.x < -200 || p.x > W + 200 || p.y < -200 || p.y > H + 200) {
+          this.particles.splice(i,1);
+          continue;
+        }
+      }
+      
       if (p.kind === 'spark'){
         p.vx *= 0.93;
         p.vy *= 0.93;
       }
       if (p.kind === 'ring') p.r += 200*dt;
 
-      if (p.life <= 0) this.particles.splice(i,1);
+      if (p.life <= 0) {
+        this.particles.splice(i,1);
+      }
     }
 
     for (let i=this.popups.length-1;i>=0;i--){
