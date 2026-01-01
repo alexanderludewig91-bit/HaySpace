@@ -27,7 +27,7 @@ Das Projekt ist modular aufgebaut, um Wartbarkeit und Skalierbarkeit zu gewährl
 
 ```
 src/
-├── main.js                 # Einstiegspunkt (~725 Zeilen)
+├── main.js                 # Einstiegspunkt (781 Zeilen)
 │                           # - Canvas-Initialisierung
 │                           # - Input-Handling (Keyboard + Gamepad)
 │                           # - Button-Event-Listener
@@ -35,7 +35,7 @@ src/
 │                           # - Koordiniert alle Systeme
 │
 ├── game/
-│   ├── Game.js            # Game-Logik (901 Zeilen)
+│   ├── Game.js            # Game-Logik (1218 Zeilen)
 │   │                       # - Game-State-Management
 │   │                       # - Player-Physik und Bewegung
 │   │                       # - Enemy-Spawning und AI
@@ -61,11 +61,11 @@ src/
 │                           # - Level-Initialisierung
 │
 ├── render/
-│   └── GameRenderer.js    # Rendering-Funktionen (450+ Zeilen)
+│   └── GameRenderer.js    # Rendering-Funktionen (1749 Zeilen)
 │                           # - drawPlayer() - Spieler-Rendering
 │                           # - drawEnemy() - Gegner-Rendering
-│                           # - drawBoss() - Boss-Rendering (3 verschiedene Designs)
-│                           # - drawBullet() - Projektil-Rendering
+│                           # - drawBoss() - Boss-Rendering (Level-abhängige Designs und Mechaniken)
+│                           # - drawBullet() - Projektil-Rendering (Level-abhängige Farben)
 │                           # - drawPickup() - Pickup-Rendering
 │                           # - drawParticle() - Partikel-Effekte
 │                           # - drawPopup() - Text-Popups
@@ -184,6 +184,7 @@ src/
 │   │                       # - clamp() - Werte begrenzen
 │   │                       # - rand() - Zufallszahlen
 │   │                       # - lerp() - Lineare Interpolation
+│   │                       # - distanceToLineSegment() - Distanz von Punkt zu Liniensegment (für Laser-Ring Kollision)
 │   │
 │   └── LocalStorageManager.js  # LocalStorage-Manager (67 Zeilen)
 │                                # - resetLocalStorage() - Alle Daten zurücksetzen
@@ -213,12 +214,12 @@ Das Spiel verwendet einen **Fixed Timestep** für konsistente Physik unabhängig
 ### Game-State-Management
 
 Die `Game`-Klasse verwaltet den gesamten Spielzustand:
-- `state`: 'title', 'levelSelect', 'play', 'dead', 'levelComplete', 'gameComplete'
-- `currentLevel`: Aktuelles Level (1-3)
+- `state`: 'title', 'levelSelect', 'play', 'dead', 'levelComplete', 'gameComplete', 'shop'
+- `currentLevel`: Aktuelles Level (1-5)
 - `unlockedLevels`: Array der freigeschalteten Level (gespeichert in LocalStorage)
 - `paused`: Pause-Zustand
 - `hardMode`: Schwierigkeitsmodus
-- Alle Game-Entities (Player, Enemies, Bullets, etc.)
+- Alle Game-Entities (Player, Enemies, Bullets, Boss, Ring-Elemente, etc.)
 
 ### Rendering-Pipeline
 
@@ -264,14 +265,19 @@ Die `Game`-Klasse verwaltet den gesamten Spielzustand:
   - Level 3: 630 HP (Normal) / 780 HP (Hard), +50% HP, deutlich aggressiver
 - **Designs**: 
   - Level 1: Rechteckiges Design (Rot/Pink)
-  - Level 2: Hexagonales Design (Lila/Violett, rotierend)
-  - Level 3: Oktagonales Design (Orange/Rot, Spikes, rotierende Ringe)
+  - Level 2: Hexagonales Design (Lila/Violett, rotierend, Laser-Ring)
+  - Level 3: Eigene Grafik (`boss_core3.png`), rotierender Laser-Ring (rot), 16 Ring-Elemente (2 Ringe à 8, rotieren in entgegengesetzte Richtungen)
 - **Schussmuster**: 
-  - Level 1: 10-12 Petals, 0.6s Cooldown
-  - Level 2: 11-13 Petals, 0.55s Cooldown, schnellere Rate
-  - Level 3: 12-14 Petals, 0.5s Cooldown, schnellste Rate
+  - Level 1: 10-12 Petals, 0.6s Cooldown, lila Schüsse
+  - Level 2: 11-13 Petals, 0.55s Cooldown, schnellere Rate, lila Schüsse
+  - Level 3: 12-14 Petals, 0.5s Cooldown, schnellste Rate, **rote Schüsse** (passend zum Boss-Design)
+- **Level 3 Spezial-Mechaniken**:
+  - **Ring-Elemente**: 16 zerstörbare Ring-Elemente (je 55 HP) schützen den Boss
+  - **Laser-Ring**: Roter Laser-Ring mit Hitbox (sehr hohe HP, kann nicht zerstört werden)
+  - **Zerstörungs-Logik**: Laser-Ring verschwindet erst, wenn alle Ring-Elemente zerstört sind
+  - **Kollisions-Detection**: Schüsse treffen zuerst Ring-Elemente oder Laser-Ring, dann den Boss
 - **Patterns**: Rotierende Projektile, gezielte Bursts, Beam-Attacke
-- **Rage-Mode**: Bei <55% HP, Beam-Attacken
+- **Rage-Mode**: Bei <55% HP, Beam-Attacken (Level 3: rote Beam-Partikel)
 
 ### Pickup-System
 - **Shield**: Stellt Schild wieder her
@@ -373,7 +379,7 @@ Das Spiel besteht aus **5 Leveln**, die nacheinander freigeschaltet werden:
 
 #### Audio-System
 - ✅ Hintergrundmusik für Titelbildschirm (Intro.mp3)
-- ✅ Level-spezifische Hintergrundmusik (Level1-5.mp3)
+- ✅ Level-spezifische Hintergrundmusik für alle 5 Level (Level1.mp3, Level2.mp3, Level3.mp3, Level4.mp3, Level5.mp3)
 - ✅ Musik-Lautstärke-Kontrolle (0-100%)
 - ✅ Soundeffekte-Lautstärke-Kontrolle (0-100%)
 - ✅ Settings-Menü mit Slidern
@@ -384,9 +390,13 @@ Das Spiel besteht aus **5 Leveln**, die nacheinander freigeschaltet werden:
 - ✅ Level-abhängige Boss-Stats (HP, Schussrate, Petals)
 - ✅ Verschiedene Boss-Designs pro Level
   - Level 1: Rechteckig (Rot/Pink)
-  - Level 2: Hexagonal (Lila/Violett, rotierend)
-  - Level 3: Oktagonal (Orange/Rot, Spikes, rotierende Ringe)
+  - Level 2: Hexagonal (Lila/Violett, rotierend, Laser-Ring)
+  - Level 3: Eigene Grafik (`boss_core3.png`), rotierender Laser-Ring (rot), 16 Ring-Elemente
 - ✅ Level-abhängige Boss-Wellen (Level 1: Welle 6, Level 2: Welle 7, Level 3: Welle 8)
+- ✅ Level 3 Boss Spezial-Mechaniken:
+  - 16 zerstörbare Ring-Elemente (2 Ringe à 8, rotieren in entgegengesetzte Richtungen)
+  - Roter Laser-Ring mit Hitbox (schützt Boss, verschwindet erst wenn alle Ring-Elemente zerstört sind)
+  - Rote Schüsse und Beam-Partikel (passend zum Boss-Design)
 
 #### Wellen-System
 - ✅ Level-abhängige Anzahl von Wellen vor dem Boss
@@ -556,7 +566,7 @@ node scripts/fix-base-path.js
   - Läuft im Loop
   - Stoppt, wenn ein Level gestartet wird
   - Startet wieder, wenn zum Titelbildschirm zurückgekehrt wird
-- **Level-Musik**: `/public/backround-music/Level1.mp3`, `Level2.mp3`, `Level3.mp3`
+- **Level-Musik**: `/public/backround-music/Level1.mp3`, `Level2.mp3`, `Level3.mp3`, `Level4.mp3`, `Level5.mp3`
   - Startet automatisch beim Level-Start
   - Läuft im Loop während des Levels
   - Läuft weiter, wenn über Pausenmenü zu Level Select navigiert wird
@@ -693,9 +703,9 @@ npm run preview  # Teste Production-Build lokal
 - **Zu groß**: >1000 Zeilen → sollte aufgeteilt werden
 
 Aktuelle Dateigrößen (nach Refaktorierung):
-- `main.js`: ~725 Zeilen ✅ (reduziert von 1593 Zeilen)
-- `Game.js`: 901 Zeilen ✅
-- `GameRenderer.js`: 450+ Zeilen ✅
+- `main.js`: 781 Zeilen ✅ (reduziert von 1593 Zeilen)
+- `Game.js`: 1218 Zeilen ✅
+- `GameRenderer.js`: 1749 Zeilen ✅
 - `GameLoop.js`: 216 Zeilen ✅
 - `LevelManager.js`: 89 Zeilen ✅
 - `MenuManager.js`: 218 Zeilen ✅
@@ -707,7 +717,7 @@ Aktuelle Dateigrößen (nach Refaktorierung):
 - `LocalStorageManager.js`: 67 Zeilen ✅
 - `GamepadSystem.js`: 313 Zeilen ✅
 - `GamepadMenuNavigation.js`: 243 Zeilen ✅
-- `Shop.js`: 279 Zeilen ✅
+- `Shop.js`: 576 Zeilen ✅
 - `UpgradeSystem.js`: 201 Zeilen ✅
 - `HUD.js`: 263 Zeilen ✅
 - `AudioSystem.js`: 184 Zeilen ✅

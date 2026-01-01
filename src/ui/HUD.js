@@ -1,6 +1,6 @@
 import { clamp } from '../utils/math.js';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config.js';
-import { drawRoundedRect, drawGlowCircle } from '../render/GameRenderer.js';
+import { drawRoundedRect, drawGlowCircle } from '../render/RenderUtils.js';
 
 const W = CANVAS_WIDTH;
 const H = CANVAS_HEIGHT;

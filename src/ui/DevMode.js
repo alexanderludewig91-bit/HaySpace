@@ -1,5 +1,5 @@
 import { ensureAudio } from '../systems/AudioSystem.js';
-import { drawEnemy } from '../render/GameRenderer.js';
+import { drawEnemy } from '../render/EnemyRenderer.js';
 
 export function initDevMode(game, resetLocalStorage, upgradeSystem = null, startLevelFn = null, dependencies = null) {
   // DOM Elements
