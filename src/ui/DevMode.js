@@ -87,6 +87,7 @@ export function initDevMode(game, resetLocalStorage, upgradeSystem = null, start
   const devEnemyTableBody = document.getElementById('devEnemyTableBody');
   const devBossWaveLevel1 = document.getElementById('devBossWaveLevel1');
   const devBossWaveLevel2 = document.getElementById('devBossWaveLevel2');
+  const devBossWaveLevel3 = document.getElementById('devBossWaveLevel3');
   
   // Referenzen zu anderen Elementen
   const overlay = document.getElementById('overlay');
@@ -257,6 +258,25 @@ export function initDevMode(game, resetLocalStorage, upgradeSystem = null, start
       // Dev-Menü schließen
       devModePanel.classList.add('hidden');
       alert('Boss Wave Level 2 gestartet!');
+    } else {
+      alert('startLevel Funktion nicht verfügbar!');
+    }
+  });
+
+  // Boss Wave Level 3 Button
+  devBossWaveLevel3.addEventListener('click', () => {
+    if (startLevelFn && dependencies) {
+      // Level 3 starten
+      startLevelFn(3, dependencies);
+      // Wave auf Boss-Welle setzen (5 + currentLevel = 5 + 3 = 8)
+      game.wave = 8;
+      // Alle Gegner löschen
+      game.enemies = [];
+      // Boss spawnen
+      game.spawnBoss();
+      // Dev-Menü schließen
+      devModePanel.classList.add('hidden');
+      alert('Boss Wave Level 3 gestartet!');
     } else {
       alert('startLevel Funktion nicht verfügbar!');
     }

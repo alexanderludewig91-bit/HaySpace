@@ -72,6 +72,12 @@ html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/boss_core2\.png
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/boss_core2\.png/g, `$1'${base}boss_core2.png`);
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/boss_core2_ring\.png/g, `$1"${base}boss_core2_ring.png`);
 html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/boss_core2_ring\.png/g, `$1'${base}boss_core2_ring.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/boss_core3\.png/g, `$1"${base}boss_core3.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/boss_core3\.png/g, `$1'${base}boss_core3.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/boss_core3_ring\.png/g, `$1"${base}boss_core3_ring.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/boss_core3_ring\.png/g, `$1'${base}boss_core3_ring.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)"\/boss_core3_ring_element\.png/g, `$1"${base}boss_core3_ring_element.png`);
+html = html.replace(/(href|src|background-image:\s*url\(['"]?)'\/boss_core3_ring_element\.png/g, `$1'${base}boss_core3_ring_element.png`);
 
 if (html === beforeReplace) {
   console.warn('WARNING: No /assets/ paths found to replace!');
@@ -321,6 +327,46 @@ if (existsSync(assetsDir)) {
       if (content !== beforeBossCore2Ring) {
         const matches = (beforeBossCore2Ring.match(/\/boss_core2_ring\.png/g) || []).length;
         console.log(`  → Fixed ${matches} boss_core2_ring.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Boss Core 3 Ring Element-Bild: /boss_core3_ring_element.png -> /HaySpace/boss_core3_ring_element.png
+    // ZUERST das längste Pattern ersetzen, damit es nicht von kürzeren Patterns erfasst wird
+    if (content.includes('boss_core3_ring_element.png')) {
+      const beforeBossCore3RingElement = content;
+      
+      // Alle Varianten von /boss_core3_ring_element.png ersetzen
+      content = content.replace(/\/boss_core3_ring_element\.png/g, `${base}boss_core3_ring_element.png`);
+      
+      if (content !== beforeBossCore3RingElement) {
+        const matches = (beforeBossCore3RingElement.match(/\/boss_core3_ring_element\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} boss_core3_ring_element.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Boss Core 3 Ring-Bild: /boss_core3_ring.png -> /HaySpace/boss_core3_ring.png
+    if (content.includes('boss_core3_ring.png')) {
+      const beforeBossCore3Ring = content;
+      
+      // Alle Varianten von /boss_core3_ring.png ersetzen
+      content = content.replace(/\/boss_core3_ring\.png/g, `${base}boss_core3_ring.png`);
+      
+      if (content !== beforeBossCore3Ring) {
+        const matches = (beforeBossCore3Ring.match(/\/boss_core3_ring\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} boss_core3_ring.png reference(s) in ${file}`);
+      }
+    }
+    
+    // Boss Core 3-Bild: /boss_core3.png -> /HaySpace/boss_core3.png
+    if (content.includes('boss_core3.png')) {
+      const beforeBossCore3 = content;
+      
+      // Alle Varianten von /boss_core3.png ersetzen
+      content = content.replace(/\/boss_core3\.png/g, `${base}boss_core3.png`);
+      
+      if (content !== beforeBossCore3) {
+        const matches = (beforeBossCore3.match(/\/boss_core3\.png/g) || []).length;
+        console.log(`  → Fixed ${matches} boss_core3.png reference(s) in ${file}`);
       }
     }
     

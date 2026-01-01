@@ -1,4 +1,4 @@
-import { clamp, rand, lerp } from '../utils/math.js';
+import { clamp, rand, lerp, distanceToLineSegment } from '../utils/math.js';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config.js';
 import { sfx } from '../systems/AudioSystem.js';
 import { Starfield } from '../background/Starfield.js';
@@ -407,6 +407,39 @@ export class Game {
       t: 0, shootCD: shootCDBase, rage: 0, phase: 0,
       level: this.currentLevel // Level speichern für Schussmuster
     };
+    
+    // Für Level 3: Ring-Elemente und Laser-Ring initialisieren
+    if (this.currentLevel === 3) {
+      const ringElementHP = 55; // HP pro Ring-Element
+      this.boss.ringElements = [];
+      // Erster Ring: 8 Elemente (rotieren gegen den Uhrzeigersinn)
+      for (let i = 0; i < 8; i++) {
+        this.boss.ringElements.push({
+          index: i,
+          ringIndex: 0, // Erster Ring
+          hp: ringElementHP,
+          hpMax: ringElementHP,
+          destroyed: false
+        });
+      }
+      // Zweiter Ring: 8 Elemente (rotieren im Uhrzeigersinn)
+      for (let i = 0; i < 8; i++) {
+        this.boss.ringElements.push({
+          index: i,
+          ringIndex: 1, // Zweiter Ring
+          hp: ringElementHP,
+          hpMax: ringElementHP,
+          destroyed: false
+        });
+      }
+      
+      // Laser-Ring initialisieren (sehr hohe HP, damit er praktisch unzerstörbar ist)
+      this.boss.laserRing = {
+        hp: 999999, // Sehr hohe HP, damit er nicht durch Treffer zerstört wird
+        hpMax: 999999,
+        active: true // Wird auf false gesetzt, wenn alle Ring-Elemente zerstört sind
+      };
+    }
   }
 
   addExplosion(x,y, scale=1, doShake=false){
@@ -623,6 +656,10 @@ export class Game {
     }
     const petals = basePetals;
     
+    // Farbe basierend auf Boss-Level
+    // Level 1: 350 (lila), Level 2: 350 (lila), Level 3: 0 (rot), Level 4+: 350 (lila)
+    const bulletHue = this.boss.level === 3 ? 0 : 350;
+    
     const baseSpeed = lerp(165, 250, 1-hpRatio);
     const rot = t*1.15;
 
@@ -632,7 +669,7 @@ export class Game {
         x: this.boss.x, y: this.boss.y,
         vx: Math.cos(ang)*baseSpeed,
         vy: Math.sin(ang)*baseSpeed,
-        r: 7, dmg: this.hardMode?16:12, life: 6, hue: 350, isBoss: true, bossLevel: this.boss.level
+        r: 7, dmg: this.hardMode?16:12, life: 6, hue: bulletHue, isBoss: true, bossLevel: this.boss.level
       });
     }
 
@@ -643,7 +680,7 @@ export class Game {
         const ax = (this.player.x - this.boss.x) + rand(-40,40);
         const ay = (this.player.y - this.boss.y) + rand(-40,40);
         const len = Math.hypot(ax,ay) || 1;
-        this.enemyBullets.push({x:this.boss.x, y:this.boss.y, vx: ax/len*speed, vy: ay/len*speed, r: 7, dmg: this.hardMode?18:14, life: 6, hue: 350, isBoss: true, bossLevel: this.boss.level});
+        this.enemyBullets.push({x:this.boss.x, y:this.boss.y, vx: ax/len*speed, vy: ay/len*speed, r: 7, dmg: this.hardMode?18:14, life: 6, hue: bulletHue, isBoss: true, bossLevel: this.boss.level});
       }
     }
   }
@@ -867,27 +904,151 @@ export class Game {
       const b = this.bullets[i];
       let hit = false;
 
-      if (this.boss && Math.hypot(b.x-this.boss.x, b.y-this.boss.y) < b.r + this.boss.r){
-        this.boss.hp -= b.dmg;
-        this.score += 2;
-        // Credits hinzufügen (Score = Credits)
-        if (this.upgradeSystem) {
-          this.upgradeSystem.addCredits(2);
-        }
-        this.addExplosion(b.x,b.y, 0.55);
-        this.bullets.splice(i,1);
-        hit = true;
-        if (this.boss.hp <= 0){
-          // Massive Boss-Explosion mit blendendem Licht und großer Welle
-          this.addBossExplosion(this.boss.x, this.boss.y);
-          this.boss = null;
-          // Level-Ende: Nächstes Level freischalten
-          if (this.currentLevel < 5) {
-            this.unlockLevel(this.currentLevel + 1);
+      if (this.boss) {
+        // Für Level 3: Zuerst Laser-Ring prüfen (fängt Schüsse ab, solange er aktiv ist)
+        let laserRingHit = false;
+        if (this.boss.level === 3 && this.boss.laserRing && this.boss.laserRing.active) {
+          const laserRingRadius = this.boss.r * 1.8;
+          const glowCount = 12; // Anzahl der Glow-Punkte (wie im Renderer)
+          const glowRadius = 12; // Radius der Glow-Punkte für Collision
+          
+          // Prüfe jeden Glow-Punkt des Laser-Rings
+          for (let j = 0; j < glowCount; j++) {
+            const angle = (j / glowCount) * Math.PI * 2 + this.boss.t * 1.5; // Gleiche Rotation wie im Renderer
+            const glowX = this.boss.x + Math.cos(angle) * laserRingRadius;
+            const glowY = this.boss.y + Math.sin(angle) * laserRingRadius;
+            
+            // Collision prüfen
+            if (Math.hypot(b.x - glowX, b.y - glowY) < b.r + glowRadius) {
+              // Laser-Ring nimmt Schaden (aber hat sehr hohe HP)
+              this.boss.laserRing.hp -= b.dmg;
+              this.score += 1;
+              // Credits hinzufügen (Score = Credits)
+              if (this.upgradeSystem) {
+                this.upgradeSystem.addCredits(1);
+              }
+              this.addExplosion(b.x, b.y, 0.5);
+              this.bullets.splice(i,1);
+              hit = true;
+              laserRingHit = true;
+              break;
+            }
           }
-          // Flag setzen, dass Boss besiegt wurde, aber Spiel läuft noch weiter
-          this.bossDefeated = true;
-          // State bleibt 'play', damit das Spiel weiterläuft
+          
+          // Prüfe auch Laser-Linien (als Liniensegmente zwischen den Punkten)
+          if (!laserRingHit) {
+            const laserLineWidth = 3; // Dicke der Laser-Linien
+            for (let k = 0; k < glowCount; k++) {
+              const angle1 = (k / glowCount) * Math.PI * 2 + this.boss.t * 1.5;
+              const angle2 = ((k + 1) / glowCount) * Math.PI * 2 + this.boss.t * 1.5;
+              const x1 = this.boss.x + Math.cos(angle1) * laserRingRadius;
+              const y1 = this.boss.y + Math.sin(angle1) * laserRingRadius;
+              const x2 = this.boss.x + Math.cos(angle2) * laserRingRadius;
+              const y2 = this.boss.y + Math.sin(angle2) * laserRingRadius;
+              
+              // Prüfe, ob Bullet nahe genug an der Linie ist
+              const distToLine = distanceToLineSegment(b.x, b.y, x1, y1, x2, y2);
+              if (distToLine < b.r + laserLineWidth / 2) {
+                this.boss.laserRing.hp -= b.dmg;
+                this.score += 1;
+                if (this.upgradeSystem) {
+                  this.upgradeSystem.addCredits(1);
+                }
+                this.addExplosion(b.x, b.y, 0.5);
+                this.bullets.splice(i,1);
+                hit = true;
+                laserRingHit = true;
+                break;
+              }
+            }
+          }
+          
+          if (laserRingHit) continue;
+        }
+        
+        // Für Level 3: Dann Ring-Elemente prüfen (sie fangen Schüsse ab)
+        let ringElementHit = false;
+        if (this.boss.level === 3 && this.boss.ringElements) {
+          const ringRadius = this.boss.r * 1.5;
+          const elementSize = this.boss.r * 2 * 1.7 * 0.65; // Gleiche Größe wie im Renderer
+          const elementRadius = elementSize * 0.5; // Radius des Elements
+          
+          for (let j = 0; j < this.boss.ringElements.length; j++) {
+            const element = this.boss.ringElements[j];
+            if (element.destroyed) continue;
+            
+            // Position des Ring-Elements berechnen
+            // ringIndex 0: gegen den Uhrzeigersinn (-b.t * 1.2)
+            // ringIndex 1: im Uhrzeigersinn (b.t * 1.2)
+            const rotationDirection = element.ringIndex === 0 ? -1 : 1;
+            const angle = rotationDirection * this.boss.t * 1.2 + (element.index * Math.PI / 4);
+            const elementX = this.boss.x + Math.cos(angle) * ringRadius;
+            const elementY = this.boss.y + Math.sin(angle) * ringRadius;
+            
+            // Collision prüfen
+            if (Math.hypot(b.x - elementX, b.y - elementY) < b.r + elementRadius) {
+              element.hp -= b.dmg;
+              this.score += 1;
+              // Credits hinzufügen (Score = Credits)
+              if (this.upgradeSystem) {
+                this.upgradeSystem.addCredits(1);
+              }
+              this.addExplosion(b.x, b.y, 0.45);
+              this.bullets.splice(i,1);
+              hit = true;
+              ringElementHit = true;
+              
+              if (element.hp <= 0) {
+                element.destroyed = true;
+                this.addExplosion(elementX, elementY, 0.8);
+                
+                // Prüfen, ob alle Ring-Elemente zerstört sind
+                const allDestroyed = this.boss.ringElements.every(e => e.destroyed);
+                if (allDestroyed && this.boss.laserRing && this.boss.laserRing.active) {
+                  // Laser-Ring deaktivieren und Explosion
+                  this.boss.laserRing.active = false;
+                  const explosionRadius = this.boss.r * 1.8;
+                  for (let k = 0; k < 20; k++) {
+                    const angle = (k / 20) * Math.PI * 2;
+                    const expX = this.boss.x + Math.cos(angle) * explosionRadius;
+                    const expY = this.boss.y + Math.sin(angle) * explosionRadius;
+                    this.addExplosion(expX, expY, 1.2);
+                  }
+                  // Zentrale große Explosion
+                  this.addExplosion(this.boss.x, this.boss.y, 2.0);
+                }
+              }
+              break;
+            }
+          }
+        }
+        
+        // Wenn ein Ring-Element getroffen wurde, ist der Bullet bereits entfernt - weiter zum nächsten
+        if (ringElementHit) continue;
+        
+        // Boss selbst kann IMMER getroffen werden, wenn der Bullet nicht von einem Ring-Element abgefangen wurde
+        if (Math.hypot(b.x-this.boss.x, b.y-this.boss.y) < b.r + this.boss.r){
+          this.boss.hp -= b.dmg;
+          this.score += 2;
+          // Credits hinzufügen (Score = Credits)
+          if (this.upgradeSystem) {
+            this.upgradeSystem.addCredits(2);
+          }
+          this.addExplosion(b.x,b.y, 0.55);
+          this.bullets.splice(i,1);
+          hit = true;
+          if (this.boss.hp <= 0){
+            // Massive Boss-Explosion mit blendendem Licht und großer Welle
+            this.addBossExplosion(this.boss.x, this.boss.y);
+            this.boss = null;
+            // Level-Ende: Nächstes Level freischalten
+            if (this.currentLevel < 5) {
+              this.unlockLevel(this.currentLevel + 1);
+            }
+            // Flag setzen, dass Boss besiegt wurde, aber Spiel läuft noch weiter
+            this.bossDefeated = true;
+            // State bleibt 'play', damit das Spiel weiterläuft
+          }
         }
       }
       if (hit) continue;
@@ -964,6 +1125,8 @@ export class Game {
             this.boss.rage = 0;
             // Level 1 Boss: Original statischer Laser
             const beamX = this.player.x;
+            // Farbe für Beam-Attacke basierend auf Boss-Level
+            const beamHue = this.boss.level === 3 ? 0 : 350; // Level 3: rot, andere: lila
             this.addPopup('WARNING', beamX, 220, 0.6, 'warn');
             this.particles.push({x: beamX, y: 0, w: this.hardMode ? 34 : 42, life: this.hardMode ? 0.45 : 0.55, kind:'beamCharge', a: 1, onDone: () => {
               this.shake = Math.min(40, this.shake + 20);
@@ -973,7 +1136,7 @@ export class Game {
                 this.damagePlayer(this.hardMode ? 55 : 45);
               }
               for (let i=0;i<46;i++){
-                this.particles.push({x: beamX+rand(-60,60), y: rand(120,H), vx: rand(-340,340), vy: rand(-350,350), life: rand(0.18,0.45), r: rand(1.4,4.2), kind:'spark', hue: 350, a: 1});
+                this.particles.push({x: beamX+rand(-60,60), y: rand(120,H), vx: rand(-340,340), vy: rand(-350,350), life: rand(0.18,0.45), r: rand(1.4,4.2), kind:'spark', hue: beamHue, a: 1});
               }
             }});
           }
